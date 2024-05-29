@@ -23,10 +23,10 @@ class GameScene():
 
         self.bg = Background(50, "assets/backgrounds/background.jpeg")
 
-        self.front_grid = Grid(2000, 13, 600, 64, True, False)
+        self.front_grid = Grid(2000, 13, 600, 64)
         self.front_grid.load_level(f"levels/{level}/front.json")
 
-        self.back_grid = Grid(2000, 26, 500, 48, False, False)
+        self.back_grid = Grid(2000, 26, 500, 48)
         self.back_grid.load_level(f"levels/{level}/back.json")
 
         self.player = Player(self.front_grid, self.back_grid)

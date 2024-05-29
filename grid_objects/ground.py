@@ -7,8 +7,8 @@ from common import GlobalData as GD
 
 class Ground(GridObject):
     # A ground object is 8 times the cell size
-    def __init__(self, x, y, width, height, tile_size, cell_size, active):
-        super().__init__(x, y, cell_size, active)
+    def __init__(self, x, y, width, height, tile_size, cell_size, grid_id):
+        super().__init__(x, y, cell_size, grid_id)
         self.width = width * tile_size
         self.height = height * tile_size
         self.tile_size = tile_size

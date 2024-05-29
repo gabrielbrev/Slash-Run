@@ -12,5 +12,3 @@ GD.set_screen(window)
 
 gs = GameScene()
 gs.loop()
-
-

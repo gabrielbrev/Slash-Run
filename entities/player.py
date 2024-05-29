@@ -24,12 +24,12 @@ class Player(Entity):
 
         self.fg = fg
         self.bg = bg
+        self.curr_grid = fg
 
         self.speed = Vector(400, -9000)
         # X speed is constant, Y speed varies because of gravity
 
         self.switching = False
-        self.plane = 1
 
         self.attack_delay = 0.3
         self.last_attack_time = 0
@@ -71,7 +71,7 @@ class Player(Entity):
         if not self.get_action() == "attack" or force:
             curr_feet_pos = self.y + self.height
 
-            key = f"{key}_{self.plane}"
+            key = f"{key}_{1 if self.curr_grid == self.fg else 2}"
             super().set_action(key)
             self.sprite.set_position(self.x, self.y)
             match key:
@@ -117,20 +117,11 @@ class Player(Entity):
         if not self.switching:
             self.switching = True
             self.jump()
-
-            if self.fg.active:
-                self.fg.deactivate()
-            else:
-                self.fg.activate()
-
-                self.plane = 1
             
-            if self.bg.active:
-                self.bg.deactivate()
+            if self.curr_grid == self.bg:
+                self.curr_grid = self.fg
             else:
-                self.bg.activate()
-
-                self.plane = 2
+                self.curr_grid = self.bg
 
             self.set_action("switch")
  
@@ -145,26 +136,25 @@ class Player(Entity):
             if time() - self.last_attack_time >= self.attack_delay:
                 self.set_action("run", force=True)
 
-    def game_over(self):
+    def kill(self):
         self.bg.speed = 0
         self.fg.speed = 0
-        GD.game_over == True
+        GD.game_over = True
 
     def increment_energy(self):
         if self.energy < Player.MAX_ENERGY:
             self.energy += 1
-
-    def decrement_energy(self):
-        if self.energy > 0:
-            self.energy -= 1
 
     def increment_health(self):
         if self.hp < Player.MAX_HEALTH:
             self.hp += 1
 
     def decrement_health(self):
-        if self.hp > 0:
-            self.hp -= 1
+        if not self.invincible:
+            if self.hp > 0:
+                self.hp -= 1
+            if self.hp == 0:
+                self.kill()
 
     def update_sprite(self):
         self.sprite.update()
@@ -191,13 +181,13 @@ class Player(Entity):
                 self.land(floor)
                 self.switching = False
             else:
-                self.game_over()
+                self.kill()
 
         for obj in GD.objs_on_screen:
-            if obj.active and self.collided(obj):
+            if self.curr_grid.id == obj.grid_id and self.collided(obj):
                 if isinstance(obj, Ground):
                     if self.y > obj.y and not self.invincible and not self.switching:
-                        self.game_over()
+                        self.kill()
                     else:
                         if self.switching:
                             if self.speed.y >= 0:
@@ -206,14 +196,17 @@ class Player(Entity):
                         else:
                             self.land(obj)
                 elif isinstance(obj, EnergyOrb):
-                    obj.collect()
-                    self.increment_energy()
+                    if not obj.collected:
+                        obj.collect()
+                        self.increment_energy()
                 elif isinstance(obj, Attacker):
-                    if self.get_action() == "attack":
-                        obj.kill()
-                    elif obj.is_alive() and not obj.attacked:
-                        obj.attack()
-                        self.decrement_health()
+                    if obj.is_alive():
+                        if self.get_action() == "attack":
+                            obj.kill()
+                            self.increment_energy()
+                        elif not obj.attacked:
+                            obj.attack()
+                            self.decrement_health()
 
         if self.get_action() == "attack":
             self.finish_attack()

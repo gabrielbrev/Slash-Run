@@ -6,8 +6,8 @@ from common import Vector
 from common import GlobalData as GD
 
 class EnergyOrb(GridObject):
-    def __init__(self, x, y, cell_size, active):
-        super().__init__(x, y, cell_size, active)
+    def __init__(self, x, y, cell_size, grid_id):
+        super().__init__(x, y, cell_size, grid_id)
         self.window = GD.get_window()
 
         self.speed = Vector(0, 0)

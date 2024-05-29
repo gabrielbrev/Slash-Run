@@ -12,14 +12,14 @@ class Attacker(Enemy):
     GRAVITY = 7000
     TERMINAL_VELOCITY = 7000
 
-    def __init__(self, x, y, cell_size, active):
+    def __init__(self, x, y, cell_size, grid_id):
         super().__init__(
             x=x - cell_size * 1/4, 
             y=y - cell_size * 1/2, 
             width=cell_size * 3/2, 
             height=cell_size * 3/2, 
             cell_size=cell_size, 
-            active=active
+            grid_id=grid_id
         )
 
         self.speed = Vector(0, 0)
@@ -51,7 +51,7 @@ class Attacker(Enemy):
         self.on_air = True
         
         for obj in GD.objs_on_screen:
-            if obj.active and self.collided(obj):
+            if obj.grid_id == self.grid_id and self.collided(obj):
                 if isinstance(obj, Ground):
                     self.land(obj)
         
