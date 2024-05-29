@@ -1,23 +1,36 @@
 from PPlay.sprite import Sprite
-from PPlay.window import Window
+from PPlay.gameobject import GameObject
 
-class Air(Sprite):
-    def __init__(self, window: Window, image_file, frames=1):
-        super().__init__(image_file, frames)
-        self.highlight = False
-        self.highlight_sprite = Sprite("assets/highlight.png")
-        self.highlight_sprite.x = self.x
-        self.highlight_sprite.y = self.y
+from .grid_object import GridObject
+
+from common import GlobalData as GD
+
+class Air(GridObject):
+    def __init__(self, x, y, width, height, tile_size, cell_size, active):
+        super().__init__(x, y, cell_size, active)
+        self.width = width * tile_size
+        self.height = height * tile_size
+        self.tile_size = tile_size
+        self.tiles = []
+        for i in range(width):
+            tile_list = []
+            for j in range(height):
+                tile = Sprite(f"assets/terrain/air{tile_size}.png")
+                tile.x = x + i * tile_size
+                tile.y = y + j * tile_size
+                tile_list.append(tile)
+            self.tiles.append(tile_list)
 
     def update(self):
-        self.highlight_sprite.x = self.x
-        self.highlight_sprite.y = self.y
+        for i, tile_list in enumerate(self.tiles):
+            for j, tile in enumerate(tile_list):
+                tile.x = self.x + i * self.tile_size
+                tile.y = self.y + j * self.tile_size
 
     def draw(self):
-        if self.highlight:
-            self.highlight_sprite.draw()
-            self.highlight = False
-        else:
-            super().draw()
+        for tile_list in self.tiles:
+            for tile in tile_list:
+                if GD.on_screen(tile):
+                    tile.draw()
     
         

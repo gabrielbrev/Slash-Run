@@ -76,7 +76,7 @@ class Animation(gameimage.GameImage):
     def update(self):
         if(self.playing):
             time_ms = int(round(time.time() * 1000)) #gets the curr time in ms
-            if((time_ms - self.last_time > self.frame_duration[self.curr_frame])
+            if((time_ms - self.last_time > self.frame_duration[self.curr_frame - self.initial_frame])
                and (self.final_frame != 0)):
                 self.curr_frame += 1
                 self.last_time = time_ms
