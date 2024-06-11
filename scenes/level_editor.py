@@ -66,7 +66,7 @@ class LevelEditor:
                     if self.keyboard.key_clicked("Z"):
                         self.editor.undo()
                     if self.keyboard.key_clicked("S"):
-                        self.editor.save_changes(f"levels/{self.level_id}")
+                        self.editor.save_changes(f"levels/0")
             
             if self.keyboard.key_clicked("G"):
                 self.editor.switch_grid()
