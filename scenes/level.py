@@ -29,13 +29,13 @@ class Level:
         self.back_grid = Grid(2000, 26, 500, 48)
         self.back_grid.load_level(f"levels/{level_id}/back.json")
 
-        self.player = Player(self.front_grid, self.back_grid)
-
-        self.health_bar = HealthBar(self.player)
+        self.health_bar = HealthBar()
         self.health_bar.set_position(5, 5)
 
-        self.energy_bar = EnergyBar(self.player)
+        self.energy_bar = EnergyBar()
         self.energy_bar.set_position(self.health_bar.x, self.health_bar.y + self.health_bar.height)
+
+        self.player = Player(self.front_grid, self.back_grid, self.health_bar, self.energy_bar)
 
         self.fps = FPSCounter(self.window, 0, 0, 30)
 

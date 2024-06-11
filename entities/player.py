@@ -14,6 +14,8 @@ from .entity import Entity
 from .enemy import Enemy
 from .boulder import Boulder
 
+from scenes.scene_objects.bar import Bar
+
 from time import time
 from math import sqrt
 
@@ -22,10 +24,7 @@ class Player(Entity):
     GRAVITY = 7000
     TERMINAL_VELOCITY = 7000
 
-    MAX_ENERGY = 10
-    MAX_HEALTH = 5
-
-    def __init__(self, fg: Grid, bg: Grid):
+    def __init__(self, fg: Grid, bg: Grid, health_bar: Bar, energy_bar: Bar):
         super().__init__(200, -1000, fg.cell_size, fg.cell_size)
 
         self.fg = fg
@@ -42,8 +41,8 @@ class Player(Entity):
 
         self.invincible = False
 
-        self.hp = Player.MAX_HEALTH
-        self.energy = 0
+        self.health = health_bar
+        self.energy = energy_bar
 
         self.add_sprite("run_1", "assets/sprites/kim/run_1.png", 6, 500)
         
@@ -141,8 +140,8 @@ class Player(Entity):
                 self.set_action("run", force=True)
 
     def special_attack(self):
-        if self.energy == Player.MAX_ENERGY:
-            self.energy = 0
+        if self.energy.is_maxed():
+            self.energy.set_value(0)
             for obj in GD.objs_on_screen:
                 if isinstance(obj, Enemy):
                     if obj.is_alive():
@@ -154,18 +153,15 @@ class Player(Entity):
         GD.game_over = True
 
     def increment_energy(self):
-        if self.energy < Player.MAX_ENERGY:
-            self.energy += 1
+        self.energy.increment()
 
     def increment_health(self):
-        if self.hp < Player.MAX_HEALTH:
-            self.hp += 1
+        self.health.increment
 
     def decrement_health(self):
         if not self.invincible:
-            if self.hp > 0:
-                self.hp -= 1
-            if self.hp == 0:
+            self.health.decrement()
+            if self.health.get_value() == 0:
                 self.kill()
 
     def update(self):
