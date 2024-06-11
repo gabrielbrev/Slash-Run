@@ -2,14 +2,20 @@ from PPlay.sprite import Sprite
 from PPlay.gameobject import GameObject
 
 from common import Vector
-from common import GlobalData as GD
+
 from grid_objects.ground import Ground
 from grid_objects.energy_orb import EnergyOrb
+
 from core.grid import Grid
+from core.global_data import GlobalData as GD
+
 from .attacker import Attacker
 from .entity import Entity
+from .enemy import Enemy
+from .boulder import Boulder
 
 from time import time
+from math import sqrt
 
 class Player(Entity):
     # Y referencial is inverted
@@ -26,7 +32,7 @@ class Player(Entity):
         self.bg = bg
         self.curr_grid = fg
 
-        self.speed = Vector(400, -9000)
+        self.speed = Vector(400, 0)
         # X speed is constant, Y speed varies because of gravity
 
         self.switching = False
@@ -34,16 +40,14 @@ class Player(Entity):
         self.attack_delay = 0.3
         self.last_attack_time = 0
 
-        self.invincible = True
+        self.invincible = False
 
         self.hp = Player.MAX_HEALTH
         self.energy = 0
 
-        self.add_sprite("run_1", "assets/sprites/kim/run_1.png", 6)
-        self.get_sprite("run_1").set_total_duration(500)
+        self.add_sprite("run_1", "assets/sprites/kim/run_1.png", 6, 500)
         
-        self.add_sprite("run_2", "assets/sprites/kim/run_2.png", 6)
-        self.get_sprite("run_2").set_total_duration(600)
+        self.add_sprite("run_2", "assets/sprites/kim/run_2.png", 6, 600)
 
         self.add_sprite("switch_1", "assets/sprites/kim/jump.png", 9)
         self.get_sprite("switch_1").set_sequence_time(4, 9, 75, False)
@@ -93,10 +97,10 @@ class Player(Entity):
             self.height = self.sprite.height
             self.y = curr_feet_pos - self.height
 
-    def jump(self):
+    def jump(self, height):
         if not self.on_air:
             self.on_air = True
-            self.speed.y = -1900
+            self.speed.y = -sqrt(2 * Player.GRAVITY * (height * self.curr_grid.cell_size))
             self.set_action("jump")
 
     def land(self, obj: GameObject):
@@ -114,9 +118,9 @@ class Player(Entity):
             self.x -= self.speed.x * GD.get_window().delta_time()
 
     def switch_plane(self):
-        if not self.switching:
+        if not (self.switching or self.on_air):
             self.switching = True
-            self.jump()
+            self.jump(4)
             
             if self.curr_grid == self.bg:
                 self.curr_grid = self.fg
@@ -136,9 +140,17 @@ class Player(Entity):
             if time() - self.last_attack_time >= self.attack_delay:
                 self.set_action("run", force=True)
 
+    def special_attack(self):
+        if self.energy == Player.MAX_ENERGY:
+            self.energy = 0
+            for obj in GD.objs_on_screen:
+                if isinstance(obj, Enemy):
+                    if obj.is_alive():
+                        obj.kill()
+
     def kill(self):
-        self.bg.speed = 0
-        self.fg.speed = 0
+        self.bg.speed.set_value(0)
+        self.fg.speed.set_value(0)
         GD.game_over = True
 
     def increment_energy(self):
@@ -155,10 +167,6 @@ class Player(Entity):
                 self.hp -= 1
             if self.hp == 0:
                 self.kill()
-
-    def update_sprite(self):
-        self.sprite.update()
-        self.sprite.set_position(self.x, self.y)
 
     def update(self):
         if self.on_air:
@@ -183,10 +191,14 @@ class Player(Entity):
             else:
                 self.kill()
 
-        for obj in GD.objs_on_screen:
+        for obj in GD.get_screen_objs():
             if self.curr_grid.id == obj.grid_id and self.collided(obj):
                 if isinstance(obj, Ground):
-                    if self.y > obj.y and not self.invincible and not self.switching:
+                    if (self.x < obj.x # Verifica se a colisão está acontecendo com a borda esquerda do chão
+                        and not self.invincible 
+                        and not self.switching
+                        and self.y + self.height * 4/5 > obj.y # Verifica se os pés estão abaixo do chão
+                        ):
                         self.kill()
                     else:
                         if self.switching:
@@ -205,6 +217,13 @@ class Player(Entity):
                             obj.kill()
                             self.increment_energy()
                         elif not obj.attacked:
+                            obj.attack()
+                            self.decrement_health()
+                elif isinstance(obj, Boulder):
+                    if not obj.is_destroyed():
+                        if self.get_action() == "attack":
+                            obj.destroy()
+                        elif not obj.damaged_player:
                             obj.attack()
                             self.decrement_health()
 

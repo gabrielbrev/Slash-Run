@@ -1,8 +1,8 @@
 from PPlay.window import Window
 
-from common import GlobalData as GD
+from core.global_data import GlobalData as GD
 
-from scenes.game import GameScene
+from scenes.menu import Menu
 
 window = Window(1300, 800)
 window.set_title("Slash Run")
@@ -10,5 +10,5 @@ window.set_title("Slash Run")
 GD.set_window(window)
 GD.set_screen(window)
 
-gs = GameScene()
-gs.loop()
+menu = Menu()
+menu.loop()

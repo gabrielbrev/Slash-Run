@@ -3,7 +3,7 @@ from PPlay.sprite import Sprite
 from .grid_object import GridObject
 
 from common import Vector
-from common import GlobalData as GD
+from core.global_data import GlobalData as GD
 
 class EnergyOrb(GridObject):
     def __init__(self, x, y, cell_size, grid_id):
@@ -17,7 +17,6 @@ class EnergyOrb(GridObject):
         self.sprite.playing = False
         self.sprite.set_loop(False)
         self.sprite.set_total_duration(100)
-        self.sprite.set_position(x, y)
 
         self.width = self.sprite.width
         self.height = self.sprite.height
@@ -26,6 +25,12 @@ class EnergyOrb(GridObject):
         self.collected = True
         self.speed.y = -1000
         self.sprite.playing = True
+
+    def move_left(self):
+        self.sprite.set_position(self.x, self.y)
+
+    def move_right(self):
+        self.sprite.set_position(self.x, self.y)
 
     def update(self):
         self.y += self.speed.y * self.window.delta_time()

@@ -15,10 +15,7 @@ class Button(Sprite):
         self.transition = transition
 
     def was_pressed(self):
-        if self.pressed:
-            self.pressed = False
-            return True
-        return False
+        return self.pressed
     
     def update(self):
         if self.mouse.is_over_object(self):
@@ -29,5 +26,8 @@ class Button(Sprite):
                     if self.transition:
                         self.transition.play_out(self.window)
                     self.command(*self.args)
+            else:
+                self.pressed = False
         else:
+            self.pressed = False
             self.set_curr_frame(0)

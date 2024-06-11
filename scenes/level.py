@@ -1,33 +1,33 @@
 from PPlay.window import Window
-from PPlay.keyboard import Keyboard
 from PPlay.gameimage import GameImage
 from PPlay.mouse import Mouse
 
 from core.grid import Grid
 from core.background import Background
+from core.global_data import GlobalData as GD
 
 from entities.player import Player
 
-from scenes.scene_objects.health_bar import HealthBar
-from scenes.scene_objects.energy_bar import EnergyBar
+from .scene_objects.health_bar import HealthBar
+from .scene_objects.energy_bar import EnergyBar
 
-from common import GlobalData as GD
 from common import FPSCounter
+from common import KeyboardExtra
 
-class GameScene():
-    def __init__(self, level = 0) -> None:
+class Level:
+    def __init__(self, level_id = 0) -> None:
         self.window = GD.get_window()
 
-        self.keyboard = Keyboard()
+        self.keyboard = KeyboardExtra()
         self.mouse = Mouse()
 
-        self.bg = Background(50, "assets/backgrounds/background.jpeg")
+        self.bg = Background(50, "assets/backgrounds/level_bg.jpeg")
 
         self.front_grid = Grid(2000, 13, 600, 64)
-        self.front_grid.load_level(f"levels/{level}/front.json")
+        self.front_grid.load_level(f"levels/{level_id}/front.json")
 
         self.back_grid = Grid(2000, 26, 500, 48)
-        self.back_grid.load_level(f"levels/{level}/back.json")
+        self.back_grid.load_level(f"levels/{level_id}/back.json")
 
         self.player = Player(self.front_grid, self.back_grid)
 
@@ -37,12 +37,12 @@ class GameScene():
         self.energy_bar = EnergyBar(self.player)
         self.energy_bar.set_position(self.health_bar.x, self.health_bar.y + self.health_bar.height)
 
-        self.fps = FPSCounter(0, 0, 30)
+        self.fps = FPSCounter(self.window, 0, 0, 30)
 
     def loop(self):
         while True:
             if self.keyboard.key_pressed("W"):
-                self.player.jump()
+                self.player.jump(3)
             if self.keyboard.key_pressed("A"):
                 self.player.move_left()  
             if self.keyboard.key_pressed("D"):

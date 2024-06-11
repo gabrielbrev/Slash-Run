@@ -8,7 +8,8 @@ from .scene_objects.transition import Transition
 
 from scenes.level import Level
 
-from common import GlobalData as GD
+from core.global_data import GlobalData as GD
+
 from common import KeyboardExtra
 
 class LevelSelect:

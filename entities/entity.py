@@ -10,12 +10,14 @@ class Entity(GameObject):
         self.height = height
         self.on_air = True
         self.attacking = False
-        self.sprite = Sprite("assets/highlight.png")
+        self.sprite = Sprite("assets/temp.png")
         self.SPRITES = {}
         self.curr_action = ""
 
-    def add_sprite(self, key, image_file, frames):
-        self.SPRITES[key] = Sprite(image_file, frames)
+    def add_sprite(self, key, image_file, frames, duration = 100):
+        s = Sprite(image_file, frames)
+        s.set_total_duration(duration)
+        self.SPRITES[key] = s
 
     def get_sprite(self, key):
         return self.SPRITES[key]
@@ -25,7 +27,13 @@ class Entity(GameObject):
         self.curr_action = key.split("_")[0]
 
     def get_action(self):
-        return self.curr_action
+        return self.curr_action        
+
+    def move_left(self):
+        self.sprite.set_position(self.x, self.y)
+
+    def move_right(self):
+        self.sprite.set_position(self.x, self.y)
 
     def update(self):
         self.sprite.set_position(self.x, self.y)

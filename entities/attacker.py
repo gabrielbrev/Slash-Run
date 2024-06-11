@@ -1,10 +1,11 @@
-from PPlay.sprite import Sprite
 from PPlay.gameobject import GameObject
 
 from common import Vector
-from common import GlobalData as GD
+
+from core.global_data import GlobalData as GD
 
 from grid_objects.ground import Ground
+
 from .enemy import Enemy
 
 class Attacker(Enemy):
@@ -24,11 +25,9 @@ class Attacker(Enemy):
 
         self.speed = Vector(0, 0)
 
-        self.add_sprite("idle", f"assets/sprites/monsters/attacker/idle{cell_size}.jpeg", 1)
-        self.get_sprite("idle").set_total_duration(500)
+        self.add_sprite("idle", f"assets/sprites/monsters/attacker/idle{cell_size}.jpeg", 1, 500)
 
-        self.add_sprite("attack", f"assets/sprites/monsters/attacker/attack{cell_size}.jpeg", 1)
-        self.get_sprite("attack").set_total_duration(500)
+        self.add_sprite("attack", f"assets/sprites/monsters/attacker/attack{cell_size}.jpeg", 1, 500)
 
         self.set_action("idle")
 
@@ -47,10 +46,13 @@ class Attacker(Enemy):
             if self.speed.y < Attacker.TERMINAL_VELOCITY:
                 self.speed.y += Attacker.GRAVITY * GD.get_window().delta_time()
                 self.speed.y = min(self.speed.y, Attacker.TERMINAL_VELOCITY)
+            self.y += self.speed.y * GD.get_window().delta_time()
+        else:
+            self.speed.y = 0
 
         self.on_air = True
         
-        for obj in GD.objs_on_screen:
+        for obj in GD.get_screen_objs():
             if obj.grid_id == self.grid_id and self.collided(obj):
                 if isinstance(obj, Ground):
                     self.land(obj)
