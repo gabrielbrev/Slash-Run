@@ -1,11 +1,14 @@
 from core.grid import Grid
-from core.background import Background
 from core.grid_editor import GridEditor
 from core.global_data import GlobalData as GD
 
 from .scene_objects.transition import Transition
+from .scene_objects.background import Background
 
-from common import KeyboardExtra, Multipliable, MouseExtra
+from utils import Multipliable
+
+from core.keyboard_extra import KeyboardExtra
+from core.mouse_extra import MouseExtra
 
 class LevelEditor:
     def __init__(self) -> None:
@@ -17,14 +20,14 @@ class LevelEditor:
         
         scroll_multipliers = [num/10 for num in range(10, 51, 5)]
 
-        self.bg = Background(50, "assets/backgrounds/level_bg.jpeg", speed_multipliers=scroll_multipliers)
+        self.bg = Background("assets/backgrounds/level_bg.jpeg", Multipliable(50, scroll_multipliers))
 
-        self.front_grid = Grid(2000, 13, 600, 64, speed_multipliers=scroll_multipliers)
+        self.front_grid = Grid(2000, 13, 64, Multipliable(600, scroll_multipliers), True)
         self.front_grid.load_level(f"levels/0/front.json")
         self.front_grid.move_left()
         self.front_grid.move_right()
 
-        self.back_grid = Grid(2000, 26, 500, 48, speed_multipliers=scroll_multipliers)
+        self.back_grid = Grid(2000, 26, 48, Multipliable(500, scroll_multipliers), True)
         self.back_grid.load_level(f"levels/0/back.json")
         self.back_grid.move_left()
         self.back_grid.move_right()
@@ -108,3 +111,4 @@ class LevelEditor:
 
             self.t.update()
             self.t.draw()
+            
