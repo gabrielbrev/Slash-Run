@@ -2,7 +2,7 @@ from PPlay.sprite import Sprite
 
 from .grid_object import GridObject
 
-from common import Vector
+from utils import Vector
 from core.global_data import GlobalData as GD
 
 class EnergyOrb(GridObject):
@@ -10,32 +10,29 @@ class EnergyOrb(GridObject):
         super().__init__(x, y, cell_size, grid_id)
         self.window = GD.get_window()
 
+        self.og_pos = Vector(x, y)
         self.speed = Vector(0, 0)
         self.collected = False
 
-        self.sprite = Sprite(f"assets/collectables/energy_orb{cell_size}.png", 6)
-        self.sprite.playing = False
-        self.sprite.set_loop(False)
-        self.sprite.set_total_duration(100)
+        self.add_sprite("default", f"assets/grid_objects/collectables/energy_orb{cell_size}.png", 6, 100, False)
+        self.get_sprite("default").playing = False
 
-        self.width = self.sprite.width
-        self.height = self.sprite.height
+        self.set_action("default", play=False)
     
+    def reset(self):
+        super().reset()
+        self.collected = False
+        self.speed.y = 0
+        self.set_action("default", play=False)
+
     def collect(self):
         self.collected = True
         self.speed.y = -1000
-        self.sprite.playing = True
-
-    def move_left(self):
-        self.sprite.set_position(self.x, self.y)
-
-    def move_right(self):
-        self.sprite.set_position(self.x, self.y)
+        self.get_sprite("default").playing = True
 
     def update(self):
         self.y += self.speed.y * self.window.delta_time()
-        self.sprite.set_position(self.x, self.y)
-        self.sprite.update()
+        super().update()
 
     def draw(self):
         self.sprite.draw()
