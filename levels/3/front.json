@@ -2,15 +2,14 @@
     "InfiniteGround": [
         {
             "x": 0,
-            "y": 5,
+            "y": 2,
             "tile_height": 1
         }
     ],
-    "Boulder": [
+    "SpawnPos": [
         {
-            "x": 31,
-            "y": 6,
-            "fragile": false
+            "x": 16,
+            "y": 3
         }
     ]
 }

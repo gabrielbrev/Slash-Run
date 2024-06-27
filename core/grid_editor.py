@@ -7,23 +7,29 @@ from .global_data import GlobalData as GD
 
 from grid_objects.ground import Ground
 from grid_objects.energy_orb import EnergyOrb
+from grid_objects.geyser import Geyser
+from grid_objects.spawn_position import SpawnPos
+from grid_objects.infinite_ground import InfiniteGround
+from grid_objects.end_trigger import EndTrigger
 
 from entities.attacker import Attacker
 from entities.boulder import Boulder
+from entities.destroyer import Destroyer
+from entities.flyer import Flyer
 
-from common import TimedVariable
+from utils import TimedVariable
 
 import json
 
 class GridEditor:
-    OBJ_CLASSES = [Ground, EnergyOrb, Attacker, Boulder]
+    OBJ_CLASSES = [Ground, InfiniteGround, Geyser, EnergyOrb, Attacker, Destroyer, Flyer, Boulder, SpawnPos, EndTrigger]
 
     def __init__(self, mouse: Mouse, front_grid: Grid, back_grid: Grid) -> None:
         self.mouse = mouse
         self.fg = front_grid
         self.bg = back_grid
         self.grid = front_grid
-        self.highlight = Sprite(f"assets/highlight{self.grid.cell_size}.png")
+        self.highlight = Sprite(f"assets/grid_objects/highlights/cell{self.grid.cell_size}.png")
         self.hovering = None
         self.matrix_x = 0
         self.matrix_y = 0
@@ -39,7 +45,7 @@ class GridEditor:
             self.grid = self.bg
         else:
             self.grid = self.fg
-        self.highlight = Sprite(f"assets/highlight{self.grid.cell_size}.png")
+        self.highlight = Sprite(f"assets/grid_objects/highlights/cell{self.grid.cell_size}.png")
     
     def add_undo(self, curr_obj, new_obj, x, y, grid_id):
         data = {
@@ -97,12 +103,14 @@ class GridEditor:
         except:
             hovered_obj = None
 
-        # Caso a seleção nao esteja sobre nenhum objeto, checa a colisao com objetos extensos, que sao "chatos de achar" na matriz
+        # Caso a seleção nao esteja sobre nenhum objeto, checa a colisao com objetos extensos, que ocupam mais de uma célula quando renderizados
         if not hovered_obj:
-            for obj in GD.get_screen_objs():
-                if obj.grid_id == self.grid.id and isinstance(obj, Ground) and self.highlight.collided(obj):
-                    hovered_obj = obj
-                    break
+            for obj in GD.get_screen_objs("All"):
+                if obj.grid_id == self.grid.id or obj.grid_id == -1 and self.highlight.collided(obj):
+                    if (isinstance(obj, Ground) 
+                        or isinstance(obj, EndTrigger)):
+                        hovered_obj = obj
+                        break
 
         return hovered_obj
     
@@ -122,6 +130,10 @@ class GridEditor:
             case "Ground":
                 properties = {
                     "tile_width": 1,
+                    "tile_height": 1
+                }
+            case "InfiniteGround":
+                properties = {
                     "tile_height": 1
                 }
             case "Boulder":
@@ -144,10 +156,10 @@ class GridEditor:
         self.create_properties_json()
 
     def create_object(self, class_name):
-        x, y = self.grid.translate_coordinates(self.matrix_x, self.matrix_y)
         try:
             with open("new_item_properties.json", "r") as json_file:
                 properties = json.load(json_file)
+            x, y = self.grid.translate_coordinates(self.matrix_x, self.matrix_y)
             match class_name:
                 case "Ground":
                     obj = Ground(
@@ -158,8 +170,30 @@ class GridEditor:
                         cell_size=self.grid.cell_size,
                         grid_id=self.grid.id
                     )
+                case "InfiniteGround":
+                    obj = InfiniteGround(
+                        x=x,
+                        y=y,
+                        tile_height=properties["tile_height"],
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id
+                    )
                 case "Attacker":
                     obj = Attacker(
+                        x=x,
+                        y=y,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id
+                    )
+                case "Destroyer":
+                    obj = Destroyer(
+                        x=x,
+                        y=y,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id
+                    )
+                case "Flyer":
+                    obj = Flyer(
                         x=x,
                         y=y,
                         cell_size=self.grid.cell_size,
@@ -180,9 +214,32 @@ class GridEditor:
                         cell_size=self.grid.cell_size,
                         grid_id=self.grid.id
                     )
+                case "Geyser":
+                    obj = Geyser(
+                        x=x,
+                        y=y,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id
+                    )
+                case "SpawnPos":
+                    obj = SpawnPos(
+                        x=x,
+                        y=y,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id,
+                        on_editor=True
+                    )
+                case "EndTrigger":
+                    obj = EndTrigger(
+                        x=x,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id,
+                        on_editor=True
+                    )
             return obj
-        except:
-            self.message.set_value("There was an error instantiating the new object.")
+        except Exception as e:
+            print(e)
+            self.message.set_value("Houve um erro ao tentar instanciar o novo objeto")
 
     def place_object(self):
         if 0 <= self.matrix_x < self.grid.width and 0 <= self.matrix_y < self.grid.height:
@@ -192,11 +249,10 @@ class GridEditor:
             if new_obj:
                 self.add_undo(curr_obj, new_obj, self.matrix_x, self.matrix_y, self.grid.id)
                 self.grid.matrix[self.matrix_x][self.matrix_y] = new_obj
-                GD.remove_obj_from_list(curr_obj)
+                if curr_obj:
+                    GD.remove_screen_obj(curr_obj)
 
-                # Atualizar a posicao do objeto inicializado caso esteja em (0, 0)
-                new_obj.move_left()
-                new_obj.move_right()
+                new_obj.update_position()
 
     def delete_hovered_object(self):
         if 0 <= self.matrix_x < self.grid.width and 0 <= self.matrix_y < self.grid.height:
@@ -209,8 +265,8 @@ class GridEditor:
                     if self.hovering in obj_list:
                         obj_list[obj_list.index(self.hovering)] = None
                         break
-            GD.remove_obj_from_list(self.hovering)
-            
+            if self.hovering:
+                GD.remove_screen_obj(self.hovering)
 
     def is_saved(self):
         return not self.has_changes

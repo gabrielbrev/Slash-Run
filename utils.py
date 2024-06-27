@@ -1,9 +1,6 @@
 from PPlay.window import Window
-from PPlay.keyboard import Keyboard
-from PPlay.mouse import Mouse
 
 from time import time
-import json
 
 class Vector:
     def __init__(self, x = 0, y = 0) -> None:
@@ -31,72 +28,6 @@ class FPSCounter:
 
     def draw(self):
         self.window.draw_text(str(self.curr_fps), self.x, self.y, self.size, self.color)
-
-class DataManager:
-    def __init__(self) -> None:
-        try:
-            with open("data.json", "r") as json_file:
-                self._data: dict = json.load(json_file)
-        except:
-            print("Could not instantiate object")
-
-    def write(self, key, data):
-        if key in self._data.keys():
-            self._data[key] = data
-            try:
-                with open("data.json", "w") as json_file:
-                    json.dump(self._data, json_file)
-                    return 0
-            except:
-                print("Could not read file")
-        return -1
-        
-    def read(self, key):
-        try:
-            with open("data.json", "r") as json_file:
-                self._data: dict = json.load(json_file)
-        except:
-            print("Could not read file")
-            return
-        if key in self._data.keys():
-            return self._data[key]
-        
-    def get_data_dict(self):
-        return self._data
-
-class KeyboardExtra(Keyboard):
-    _clicked_keys = []
-
-    def __init__(self) -> None:
-        super().__init__()
-
-    def key_clicked(self, key):
-        if self.key_pressed(key):
-            if key not in KeyboardExtra._clicked_keys:
-                KeyboardExtra._clicked_keys.append(key)
-                return True
-            else:
-                return False
-        elif key in KeyboardExtra._clicked_keys:
-            KeyboardExtra._clicked_keys.remove(key)
-        return False
-    
-class MouseExtra(Mouse):
-    _clicked_buttons = []
-
-    def __init__(self):
-        super().__init__()
-
-    def is_button_clicked(self, button):
-        if self.is_button_pressed(button):
-            if button not in MouseExtra._clicked_buttons:
-                MouseExtra._clicked_buttons.append(button)
-                return True
-            else:
-                return False
-        elif button in MouseExtra._clicked_buttons:
-            MouseExtra._clicked_buttons.remove(button)
-        return False
   
 class Multipliable:
     def __init__(self, value: int, multipliers: list = [1]) -> None:
@@ -138,3 +69,16 @@ class TimedVariable:
         if time() - self.set_time >= self.duration:
             self.value = self.default_value
         return self.value
+
+    def get_duration(self):
+        return self.duration
+    
+# Essa é uma ferramenta de debugging e não deve ser usada em multiplos pontos do código pois não vai funcionar como desejado
+class PrintChange:
+    _last_print = None
+    @staticmethod
+    def print(*values):
+        if PrintChange._last_print != values:
+            print(*values)
+            PrintChange._last_print = values
+    

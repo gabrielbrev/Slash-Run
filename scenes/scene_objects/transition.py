@@ -3,6 +3,8 @@ from PPlay.window import Window
 
 from time import time
 
+from core.global_data import GlobalData as GD
+
 class Transition:
     def __init__(self, duration):
         self.init_time = 0
@@ -43,6 +45,8 @@ class Transition:
             window.update()
             self.update()
             self.draw()
+        window.set_background_color((0, 0, 0))
+        window.update()
 
     def update(self):
         if self.curr_t:

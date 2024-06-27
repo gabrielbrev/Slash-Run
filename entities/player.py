@@ -1,18 +1,14 @@
-from PPlay.sprite import Sprite
 from PPlay.gameobject import GameObject
+from PPlay.sprite import Sprite
 
-from common import Vector
-
-from grid_objects.ground import Ground
-from grid_objects.energy_orb import EnergyOrb
+from utils import Vector
+from utils import PrintChange
 
 from core.grid import Grid
 from core.global_data import GlobalData as GD
 
-from .attacker import Attacker
 from .entity import Entity
 from .enemy import Enemy
-from .boulder import Boulder
 
 from scenes.scene_objects.bar import Bar
 
@@ -23,6 +19,7 @@ class Player(Entity):
     # Y referencial is inverted
     GRAVITY = 7000
     TERMINAL_VELOCITY = 7000
+    GROUND_FRICTION = 550
 
     def __init__(self, fg: Grid, bg: Grid, health_bar: Bar, energy_bar: Bar):
         super().__init__(200, -1000, fg.cell_size, fg.cell_size)
@@ -31,7 +28,7 @@ class Player(Entity):
         self.bg = bg
         self.curr_grid = fg
 
-        self.speed = Vector(400, 0)
+        self.speed = Vector(bg.speed.get_value(), 0)
         # X speed is constant, Y speed varies because of gravity
 
         self.switching = False
@@ -44,89 +41,115 @@ class Player(Entity):
         self.health = health_bar
         self.energy = energy_bar
 
-        self.add_sprite("run_1", "assets/sprites/kim/run_1.png", 6, 500)
-        
-        self.add_sprite("run_2", "assets/sprites/kim/run_2.png", 6, 600)
-
-        self.add_sprite("switch_1", "assets/sprites/kim/jump.png", 9)
-        self.get_sprite("switch_1").set_sequence_time(4, 9, 75, False)
-
-        self.add_sprite("switch_2", "assets/sprites/kim/jump.png", 9)
-        self.get_sprite("switch_2").set_sequence_time(0, 5, 75, False)
-
-        self.add_sprite("jump_1", "assets/sprites/kim/jump.png", 9)
-        self.get_sprite("jump_1").set_curr_frame(0)
-        self.get_sprite("jump_1").playing = False
-
-        self.add_sprite("jump_2", "assets/sprites/kim/jump.png", 9)
-        self.get_sprite("jump_2").set_curr_frame(4)
-        self.get_sprite("jump_2").playing = False
-
-        self.add_sprite("attack_1", "assets/sprites/kim/attack_1.png", 4)
-        self.get_sprite("attack_1").set_sequence_time(0, 4, 50, False)
-
-        self.add_sprite("attack_2", "assets/sprites/kim/attack_2.png", 4)
-        self.get_sprite("attack_2").set_sequence_time(0, 4, 50, False)
+        self.add_sprite("run_1", "assets/entities/kim/run_1.png", 6, 500)
+        self.add_sprite("run_2", "assets/entities/kim/run_2.png", 6, 600)
+        self.add_sprite("switch_1", "assets/entities/kim/switch_1.png", 7, 500, False)
+        self.add_sprite("switch_2", "assets/entities/kim/switch_2.png", 7, 500, False)
+        self.add_sprite("jump_1", "assets/entities/kim/jump_1.png", 1)
+        self.add_sprite("jump_2", "assets/entities/kim/jump_2.png", 1)
+        self.add_sprite("attack_1", "assets/entities/kim/attack_1.png", 4, 50, False)
+        self.add_sprite("attack_2", "assets/entities/kim/attack_2.png", 4, 50, False)
+        self.add_sprite("death_1", "assets/entities/kim/death_1.png", 1)
+        self.add_sprite("death_2", "assets/entities/kim/death_2.png", 1)
 
         super().set_action("run_1")
 
+        GD.set_player(self) 
+
     def set_action(self, key, force = False):
-        if not self.get_action() == "attack" or force:
+        curr_action = self.get_action()
+        if curr_action != key and (not curr_action == "attack" or force):
             curr_feet_pos = self.y + self.height
 
-            key = f"{key}_{1 if self.curr_grid == self.fg else 2}"
-            super().set_action(key)
-            self.sprite.set_position(self.x, self.y)
+            play = True
+            reset = False
             match key:
-                case "switch_1":
-                    self.sprite.playing = True
-                    self.sprite.set_curr_frame(4)
-                case "switch_2":
-                    self.sprite.playing = True
-                    self.sprite.set_curr_frame(0)
+                case "switch":
+                    reset = True
+                case "attack":
+                    reset = True
 
-                case "attack_1":
-                    self.sprite.playing = True
-                    self.sprite.set_curr_frame(0)
-                case "attack_2":
-                    self.sprite.playing = True
-                    self.sprite.set_curr_frame(0)
-
+            super().set_action(f"{key}_{1 if self.curr_grid == self.fg else 2}", reset=reset, play=play)
+            self.sprite.set_position(self.x, self.y)
             self.width = self.sprite.width
             self.height = self.sprite.height
             self.y = curr_feet_pos - self.height
 
+    def get_curr_grid(self):
+        return self.curr_grid
+    
+    def is_switching(self):
+        return self.switching
+
+    def get_spawn_position(self):
+        front_grid_spawn = self.fg.get_spawn_position()
+        back_grid_spawn = self.bg.get_spawn_position()
+        if front_grid_spawn and back_grid_spawn:
+            if front_grid_spawn[0] > back_grid_spawn[0]:
+                grid = self.fg
+                x, y = front_grid_spawn
+            else:
+                grid = self.bg
+                x, y = back_grid_spawn
+        elif front_grid_spawn:
+            x, y = front_grid_spawn
+            grid = self.fg
+        elif back_grid_spawn:
+            x, y = back_grid_spawn
+            grid = self.bg
+        else:
+            x = 200
+            y = -1000
+            grid = self.fg
+        return {
+            "x": x,
+            "y": y,
+            "grid": grid
+        }
+    
+    def set_spawn_positon(self):
+        spawn_data = self.get_spawn_position()
+        self.x = spawn_data["x"]
+        self.y = spawn_data["y"]
+        if self.curr_grid != spawn_data["grid"]:
+            self.switch_plane()
+
     def jump(self, height):
-        if not self.on_air:
-            self.on_air = True
-            self.speed.y = -sqrt(2 * Player.GRAVITY * (height * self.curr_grid.cell_size))
-            self.set_action("jump")
+            if not self.on_air:
+                self.on_air = True
+                self.speed.y = -sqrt(2 * Player.GRAVITY * (height * self.curr_grid.cell_size))
+                if not self.switching:
+                    self.set_action("jump", force=True)
 
     def land(self, obj: GameObject):
         if self.on_air:
             self.on_air = False
-            self.y = obj.y - self.height + 1
-            self.set_action("run")
+            self.y = obj.y - self.height
+            if self.alive:
+                self.set_action("run")
 
     def move_right(self):
-        if self.x + self.width < GD.get_window().width:
-            self.x += self.speed.x * GD.get_window().delta_time()
+            if self.x + self.width < GD.get_window().width:
+                self.x += 400 * GD.get_window().delta_time()
 
     def move_left(self):
-        if self.x > 0:
-            self.x -= self.speed.x * GD.get_window().delta_time()
+            if self.x > 0:
+                self.x -= 400 * GD.get_window().delta_time()
 
     def switch_plane(self):
-        if not (self.switching or self.on_air):
-            self.switching = True
-            self.jump(4)
-            
-            if self.curr_grid == self.bg:
-                self.curr_grid = self.fg
-            else:
-                self.curr_grid = self.bg
+        if self.curr_grid == self.bg:
+            self.curr_grid = self.fg
+        else:
+            self.curr_grid = self.bg
+        self.speed.x = self.curr_grid.speed.get_value()
 
-            self.set_action("switch")
+    def jump_switch(self):
+            if not (self.switching or self.on_air):
+                self.invincible = True
+                self.switching = True
+                self.jump(4)
+                self.set_action("switch")
+                self.switch_plane()
  
     def attack(self):
         if time() - self.last_attack_time >= self.attack_delay:
@@ -142,15 +165,17 @@ class Player(Entity):
     def special_attack(self):
         if self.energy.is_maxed():
             self.energy.set_value(0)
-            for obj in GD.objs_on_screen:
+            for obj in GD.get_screen_objs("All"):
                 if isinstance(obj, Enemy):
                     if obj.is_alive():
                         obj.kill()
+            return 1
+        return 0
 
     def kill(self):
-        self.bg.speed.set_value(0)
-        self.fg.speed.set_value(0)
-        GD.game_over = True
+        self.alive = False
+        self.health.set_value(0)
+        GD.set_game_over(True)
 
     def increment_energy(self):
         self.energy.increment()
@@ -160,11 +185,21 @@ class Player(Entity):
 
     def decrement_health(self):
         if not self.invincible:
+            temp = self.health.get_value()
             self.health.decrement()
             if self.health.get_value() == 0:
                 self.kill()
+            elif self.health.get_value() < temp:
+                self.blink(1)
 
-    def update(self):
+    def handle_physics(self):
+        if self.health.get_value() == 0:
+            self.x += self.speed.x * GD.get_window().delta_time()
+            self.speed.x -= Player.GROUND_FRICTION * GD.get_window().delta_time()
+            self.speed.x = max(self.speed.x, 0)
+        elif GD.is_level_complete():
+            self.x += self.speed.x * GD.get_window().delta_time()
+
         if self.on_air:
             if not self.switching:
                 self.set_action("jump")
@@ -179,53 +214,113 @@ class Player(Entity):
         self.on_air = True
 
         if self.y + self.height > GD.get_window().height:
-            if self.invincible:
-                floor = GameObject()
-                floor.y = GD.get_window().height
-                self.land(floor)
-                self.switching = False
-            else:
-                self.kill()
+            self.kill()        
 
-        for obj in GD.get_screen_objs():
-            if self.curr_grid.id == obj.grid_id and self.collided(obj):
-                if isinstance(obj, Ground):
-                    if (self.x < obj.x # Verifica se a colisão está acontecendo com a borda esquerda do chão
-                        and not self.invincible 
-                        and not self.switching
-                        and self.y + self.height * 4/5 > obj.y # Verifica se os pés estão abaixo do chão
-                        ):
-                        self.kill()
-                    else:
-                        if self.switching:
-                            if self.speed.y >= 0:
-                                self.switching = False
-                                self.land(obj)
-                        else:
-                            self.land(obj)
-                elif isinstance(obj, EnergyOrb):
-                    if not obj.collected:
-                        obj.collect()
-                        self.increment_energy()
-                elif isinstance(obj, Attacker):
-                    if obj.is_alive():
-                        if self.get_action() == "attack":
-                            obj.kill()
-                            self.increment_energy()
-                        elif not obj.attacked:
+    def handle_ground(self, obj):
+        if (self.x < obj.x # Verifica se a colisão está acontecendo com a borda esquerda do chão
+            and not self.invincible
+            and not self.switching
+            and self.y + self.height * 4/5 > obj.y # Verifica se os pés estão abaixo do chão
+            ):
+            self.kill()
+        else:
+            if self.switching:
+                if self.speed.y >= 0:
+                    self.switching = False
+                    self.invincible = False
+                    self.land(obj)
+            else:
+                self.land(obj)
+
+    def handle_collisions(self):        
+        for obj in GD.get_screen_objs("Ground", self.curr_grid.id):
+            if obj.collided(self):
+                self.handle_ground(obj)
+
+        for obj in GD.get_screen_objs("InfiniteGround", self.curr_grid.id):
+            if obj.collided(self):
+                self.handle_ground(obj)
+
+        for obj in GD.get_screen_objs("EnergyOrb", self.curr_grid.id):
+            if obj.collided(self) and not obj.collected and not self.switching:
+                obj.collect()
+                self.increment_energy()
+
+        for obj in GD.get_screen_objs("Attacker", self.curr_grid.id):
+            if obj.is_alive() and obj.collided(self):
+                if self.get_action() == "attack":
+                    obj.kill()
+                    self.increment_energy()
+                elif not obj.attacked:
+                    obj.attack()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("Destroyer", self.curr_grid.id):
+            if obj.is_alive() and obj.collided(self):
+                if self.get_action() == "attack":
+                    obj.kill()
+                    self.increment_energy()
+                elif not obj.attacked:
+                    obj.attack()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("Boulder", self.curr_grid.id):
+            if obj.collided(self) and not obj.is_destroyed():
+                if not obj.damaged_player:
+                    obj.deal_damage()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("FireBall", self.curr_grid.id):
+            if obj.collided(self) and not obj.is_destroyed():
+                if self.get_action() == "attack":
+                    obj.destroy()
+                elif not obj.damaged_player:
+                    obj.deal_damage()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("Geyser", self.curr_grid.id):
+            if obj.collided(self):
+                if not obj.damaged_player and (obj.get_action() == "active" or obj.get_action() == "rise"):
+                    obj.damage_player()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("Trigger", self.curr_grid.id):
+            if obj.collided(self):
+                obj.activate()
+
+        for obj in GD.get_screen_objs("EndTrigger", self.curr_grid.id):
+            if obj.collided(self):
+                obj.activate()
+
+        for obj in GD.get_screen_objs("SkullordHand", self.curr_grid.id):
+            if obj.collided(self):
+                if obj.is_alive():
+                    if self.get_action() == "attack" and obj.get_action() == "smash":
+                        obj.damage()
+                    elif not obj.attacked:
+                        if obj.get_action() == "smash" and obj.is_moving():
                             obj.attack()
                             self.decrement_health()
-                elif isinstance(obj, Boulder):
-                    if not obj.is_destroyed():
-                        if self.get_action() == "attack":
-                            obj.destroy()
-                        elif not obj.damaged_player:
-                            obj.attack()
-                            self.decrement_health()
+
+        for obj in GD.get_screen_objs("SkullordHead", self.curr_grid.id):
+            if obj.collided(self):
+                if obj.get_action() == "magic" and self.get_action() == "attack":
+                    obj.decrement_health()
+
+    def update(self):
+        self.handle_physics()
+
+        if self.total_blinks:
+            self.invincible = True
+        elif not self.switching:
+            self.invincible = False
+
+        self.handle_collisions()
 
         if self.get_action() == "attack":
             self.finish_attack()
 
+        if not self.is_alive():
+            self.set_action("death")
+
         super().update()
-            
-        

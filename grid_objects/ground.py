@@ -4,9 +4,15 @@ from .grid_object import GridObject
 
 from core.global_data import GlobalData as GD
 
+from utils import Vector
+
+from time import time
+
 class Ground(GridObject):
+    GRAVITY = 500
+
     # A ground object is 8 times the cell size
-    def __init__(self, x, y, tile_width, tile_height, cell_size, grid_id):
+    def __init__(self, x, y, tile_width, tile_height, cell_size, grid_id, infinite=False):
         self.SPECIAL_DATA = ["tile_width", "tile_height"]
         super().__init__(x, y, cell_size, grid_id)
         self.tile_size = cell_size * 8
@@ -19,29 +25,70 @@ class Ground(GridObject):
         for i in range(tile_width):
             tile_list = []
             for j in range(tile_height):
-                tile = Sprite(f"assets/terrain/ground{self.tile_size}.jpeg")
+                if infinite:
+                    if j == 0:
+                        name = "top_mid"
+                    else:
+                        name = "center_mid"
+                else:
+                    if i == tile_width - 1 == 0:
+                        if j == 0:
+                            name = "top_single"
+                        else:
+                            name = "center_single"
+                    elif i == 0:
+                        if j == 0:
+                            name = "top_left"
+                        else:
+                            name = "center_left"
+                    elif i == tile_width - 1:
+                        if j == 0:
+                            name = "top_right"
+                        else:
+                            name = "center_right"
+                    else:
+                        if j == 0:
+                            name = "top_mid"
+                        else:
+                            name = "center_mid"
+
+                tile = Sprite(f"assets/grid_objects/ground/{name}{self.tile_size}.png")
                 tile.x = x + i * self.tile_size
                 tile.y = y + j * self.tile_size
                 tile_list.append(tile)
             self.tiles.append(tile_list)
-        # self.collapse = False
+        
+        self.collapsing = False
+        self.speed = Vector(0, 0)
 
-    def update(self):
+    def collapse(self):
+        self.collapsing = True
+        self.speed.y += 15
+
+    def update_position(self):
         for i, tile_list in enumerate(self.tiles):
             for j, tile in enumerate(tile_list):
                 tile.x = self.x + i * self.tile_size
                 tile.y = self.y + j * self.tile_size
 
-    def move_left(self):
-        self.update()
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
+        self.update_position()
 
-    def move_right(self):
-        self.update()
+    def update(self):
+        self.y += self.speed.y * GD.get_window().delta_time()
+        if self.collapsing:
+            self.speed.y += Ground.GRAVITY * GD.get_window().delta_time()
+        self.update_position()
 
     def draw(self):
         for tile_list in self.tiles:
             for tile in tile_list:
-                if GD.on_screen(tile):
-                    tile.draw()
+                match GD.off_screen(tile):
+                    case 0:
+                        tile.draw()
+                    case 1:
+                        break
     
         

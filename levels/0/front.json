@@ -1,16 +1,48 @@
 {
-    "Ground": [
+    "InfiniteGround": [
         {
             "x": 0,
             "y": 2,
-            "tile_width": 5,
             "tile_height": 1
         }
     ],
-    "Attacker": [
+    "EndTrigger": [
         {
-            "x": 16,
+            "x": 18,
+            "y": 6
+        },
+        {
+            "x": 20,
+            "y": 6
+        },
+        {
+            "x": 22,
             "y": 3
+        },
+        {
+            "x": 24,
+            "y": 6
+        },
+        {
+            "x": 26,
+            "y": 6
+        },
+        {
+            "x": 28,
+            "y": 6
+        }
+    ],
+    "SpawnPos": [
+        {
+            "x": 19,
+            "y": 3
+        }
+    ],
+    "Boulder": [
+        {
+            "x": 32,
+            "y": 3,
+            "fragile": false
         }
     ]
 }

@@ -1,6 +1,6 @@
 from PPlay.gameobject import GameObject
 
-from common import Vector
+from utils import Vector
 
 from core.global_data import GlobalData as GD
 
@@ -25,11 +25,12 @@ class Attacker(Enemy):
 
         self.speed = Vector(0, 0)
 
-        self.add_sprite("idle", f"assets/sprites/monsters/attacker/idle{cell_size}.jpeg", 1, 500)
-
-        self.add_sprite("attack", f"assets/sprites/monsters/attacker/attack{cell_size}.jpeg", 1, 500)
+        self.add_sprite("idle", f"assets/entities/monsters/attacker/idle{cell_size}.png", 2, 1000)
+        self.add_sprite("attack", f"assets/entities/monsters/attacker/attack{cell_size}.png", 9, 450, False)
 
         self.set_action("idle")
+
+        self.set_sprite_anchor(self.width - self.sprite.width, self.height - self.sprite.height)
 
     def land(self, obj: GameObject):
         if self.on_air:
@@ -38,8 +39,8 @@ class Attacker(Enemy):
 
     def attack(self):
         if not self.get_action() == "attack" and not self.attacked:
-            self.set_action("attack")
-            self.attacked = True
+            self.set_action("attack", reset=True)
+        super().attack()
 
     def update(self):
         if self.on_air:
@@ -52,9 +53,13 @@ class Attacker(Enemy):
 
         self.on_air = True
         
-        for obj in GD.get_screen_objs():
-            if obj.grid_id == self.grid_id and self.collided(obj):
-                if isinstance(obj, Ground):
-                    self.land(obj)
+        for obj in GD.get_screen_objs("Ground", self.grid_id):
+            if self.collided(obj):
+                self.land(obj)
+
+        if self.get_action() == "attack":
+            s = self.get_sprite("attack")
+            if s.get_curr_frame() == s.get_final_frame() - 1:
+                self.set_action("idle")
         
         super().update()

@@ -12,10 +12,15 @@ class Enemy(GridEntity):
 
     def kill(self):
         self.alive = False
+        self.blink(0.5)
+
+    def attack(self):
+        self.attacked = True
 
     def update(self):
         GridEntity.update(self)
 
     def draw(self):
-        if self.alive:
-            self.sprite.draw()
+        if not self.blinking.get_value():
+            if self.alive or self.total_blinks > 0:
+                self.sprite.draw()

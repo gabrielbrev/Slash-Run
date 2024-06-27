@@ -11,8 +11,8 @@ class InfiniteGround(GridObject):
 
         self.origin_x = x
 
-        self.g1 = Ground(x, y, 4, tile_height, cell_size, grid_id)
-        self.g2 = Ground(x + self.g1.width, y, 4, tile_height, cell_size, grid_id)
+        self.g1 = Ground(x, y, 7, tile_height, cell_size, grid_id, True)
+        self.g2 = Ground(x + self.g1.width, y, 7, tile_height, cell_size, grid_id, True)
 
         self.width = self.g1.width + self.g2.width
         self.height = self.g1.height
