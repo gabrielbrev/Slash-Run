@@ -5,6 +5,7 @@ class Bar(Sprite):
         super().__init__(image_file, frames)
         self.value = initial_value
         self.playing = False
+        self.set_curr_frame(self.value)
 
     def set_value(self, value):
         if 0 <= value < self.total_frames:
@@ -17,7 +18,7 @@ class Bar(Sprite):
         return self.value == self.total_frames - 1
 
     def increment(self):
-        if self.value < self.total_frames:
+        if self.value < self.total_frames - 1:
             self.value += 1
     
     def decrement(self):
