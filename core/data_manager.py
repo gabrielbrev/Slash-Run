@@ -6,7 +6,7 @@ class DataManager:
             with open("game_data.json", "r") as json_file:
                 self._data: dict = json.load(json_file)
         except:
-            print("Could access game data")
+            print("Could not access game data")
 
     def write(self, key, data):
         if key in self._data.keys():
@@ -69,3 +69,22 @@ class DataManager:
 
     def is_first_boot(self):
         return self.read("first_boot")
+    
+    def verify_game_files(self):
+        def create_if_not_exists(path, data):
+            try:
+                open(path, "r")
+            except FileNotFoundError:
+                with open(path, "w") as json_file:
+                    json.dump(data, json_file)
+
+        create_if_not_exists("game_data.json", {
+            "first_boot": True,
+            "current_level": 1,
+            "accessed_editor": False,
+            "music_volume": 50,
+            "sfx_volume": 50
+        })
+        for i in range(4):
+            create_if_not_exists(f"levels/{i}/back.json", {})
+            create_if_not_exists(f"levels/{i}/front.json", {})

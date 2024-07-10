@@ -17,6 +17,8 @@ window.set_title("Slash Run")
 
 dm = DataManager()
 
+dm.verify_game_files()
+
 GD.set_window(window)
 GD.set_mouse(MouseExtra())
 GD.set_keyboard(KeyboardExtra())
@@ -26,7 +28,7 @@ GD.set_sfx_volume(dm.get_sfx_volume())
 if dm.is_first_boot():
     Intro().loop()
 else:
-    title_screen = GameImage("assets/sprites/screens/title.jpeg")
+    title_screen = GameImage("assets/sprites/screens/title.png")
     title_screen.set_position(window.width/2 - title_screen.width/2, 0)
     title_screen.draw()
 

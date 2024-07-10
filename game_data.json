@@ -1,7 +1,7 @@
 {
-    "first_boot": false,
-    "current_level": 4,
-    "accessed_editor": true,
-    "music_volume": 0.0,
-    "sfx_volume": 100.0
+    "first_boot": true,
+    "current_level": 1,
+    "accessed_editor": false,
+    "music_volume": 50,
+    "sfx_volume": 50
 }

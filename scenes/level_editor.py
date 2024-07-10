@@ -42,22 +42,22 @@ class LevelEditor:
 
     def handle_keys(self):
         # Toma conta da rolagem da tela
-        if self.keyboard.key_pressed("RIGHT"):
+        if self.keyboard.key_pressed("D"):
             self.back_grid.move_left()
             self.front_grid.move_left()
             if self.back_grid.delta_x and self.front_grid.delta_x:
                 self.bg.move_left()
-        if self.keyboard.key_pressed("LEFT"):
+        if self.keyboard.key_pressed("A"):
             self.back_grid.move_right()
             self.front_grid.move_right()
             if self.back_grid.delta_x and self.front_grid.delta_x:
                 self.bg.move_right()
-        if self.keyboard.key_clicked("UP"):
+        if self.keyboard.key_clicked("W"):
             self.bg.raise_speed()
             self.front_grid.raise_speed()
             self.back_grid.raise_speed()
             self.scroll_multiplier.raise_multiplier()
-        if self.keyboard.key_clicked("DOWN"):
+        if self.keyboard.key_clicked("S"):
             self.bg.lower_speed()
             self.front_grid.lower_speed()
             self.back_grid.lower_speed()
@@ -73,19 +73,18 @@ class LevelEditor:
                 if self.keyboard.key_clicked("S"):
                     self.editor.save_changes(f"levels/0")
         
-        if self.keyboard.key_clicked("G"):
-            self.editor.switch_grid()
-        if self.keyboard.key_clicked("D"):
-            self.editor.delete_hovered_object()
-
-        if self.keyboard.key_clicked("P"):
+        if self.keyboard.key_clicked("SPACE"):
+            self.editor.switch_grid()            
+        if self.keyboard.key_clicked("E"):
             self.editor.cycle_object()
-        if self.keyboard.key_clicked("O"):
+        if self.keyboard.key_clicked("Q"):
             self.editor.cycle_object(backwards=True)
     
     def handle_mouse(self):
         if self.mouse.is_button_clicked(self.mouse.BUTTON_LEFT):
             self.editor.place_object()
+        if self.mouse.is_button_clicked(self.mouse.BUTTON_RIGHT):
+            self.editor.delete_hovered_object()
 
     def loop(self):
         self.t.play_in()

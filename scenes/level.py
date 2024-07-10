@@ -1,11 +1,11 @@
 from PPlay.gameimage import GameImage
-from PPlay.mouse import Mouse
 from PPlay.sprite import Sprite
 
 from core.grid import Grid
 from core.global_data import GlobalData as GD
 from core.move_animation import MoveAnimation as MA
 from core.keyboard_extra import KeyboardExtra
+from core.mouse_extra import MouseExtra
 from core.sound_extra import SoundExtra
 from core.data_manager import DataManager
 
@@ -106,7 +106,8 @@ class Level:
         self.retry_button.update()
 
         self.shade.draw()
-        self.window.draw_text("ESC to resume", 5, 5, 12, (235, 235, 235))
+        if not GD.is_game_over():
+            self.window.draw_text("ESC to resume", 5, 5, 12, (235, 235, 235))
         self.quit_button.draw()
         self.retry_button.draw()
 
@@ -153,9 +154,9 @@ class Level:
                     self.player.move_right()
                 if self.keyboard.key_pressed("LEFT_SHIFT"):
                     self.player.jump_switch()
-                if self.mouse.is_button_pressed(1):
+                if self.mouse.is_button_clicked(self.mouse.BUTTON_LEFT):
                     self.player.attack()
-                if self.mouse.is_button_pressed(3):
+                if self.mouse.is_button_clicked(self.mouse.BUTTON_RIGHT):
                     if self.player.special_attack():
                         self.special_attack_sprite.set_curr_frame(0)
                         self.special_attack_sprite.playing = True
@@ -244,8 +245,8 @@ class Level:
             self.health_bar.draw()
             self.energy_bar.draw()
 
-            self.fps.update()
-            self.fps.draw()
+            # self.fps.update()
+            # self.fps.draw()
 
             self.t.update()
             self.t.draw()
@@ -312,7 +313,6 @@ class Level:
                 self.energy_bar.update()
                 self.boss.update()
                 if not GD.is_level_complete() and not self.boss.is_alive():
-                    print("completou")
                     GD.set_level_complete(True)
 
             self.bg.draw()

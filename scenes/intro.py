@@ -25,9 +25,9 @@ class Intro:
 
         self.t = Transition(600)
         
-        self.images = [GameImage(f"assets/sprites/screens/intro_{i}.jpeg") for i in range(6)]
+        self.images = [GameImage(f"assets/sprites/screens/intro_{i}.png") for i in range(6)]
 
-        title_screen = GameImage("assets/sprites/screens/title.jpeg")
+        title_screen = GameImage("assets/sprites/screens/title.png")
         title_screen.set_position(self.window.width/2 - title_screen.width/2, 0)
         self.images.append(title_screen)
 
