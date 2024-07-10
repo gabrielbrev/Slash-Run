@@ -7,10 +7,13 @@ class Enemy(GridEntity):
         self.alive = True
         self.attacked = False # Monsters can only attack once
 
+        self.add_sound("damage", "assets/sounds/sfx/enemy_damage_soft.ogg", 20)
+
     def is_alive(self):
         return self.alive
 
     def kill(self):
+        self.play_sound("damage")
         self.alive = False
         self.blink(0.5)
 

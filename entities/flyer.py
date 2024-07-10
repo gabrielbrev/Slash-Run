@@ -31,7 +31,7 @@ class Flyer(Enemy):
         self.fire_ball = FireBall(x, y + 20, 0, cell_size, grid_id)
         self.speed = Vector(0, -30)
 
-        self.add_sprite("idle", f"assets/entities/monsters/flyer/idle{cell_size}.png", 8, 500)
+        self.add_sprite("idle", f"assets/sprites/entities/monsters/flyer/idle{cell_size}.png", 8, 500)
         self.set_action("idle")
 
         self.set_sprite_anchor((self.width - self.sprite.width)/2, self.height - self.sprite.height)

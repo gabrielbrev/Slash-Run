@@ -39,13 +39,17 @@ class Destroyer(Enemy):
             args=(6,)
         )
 
-        self.add_sprite("idle", f"assets/entities/monsters/destroyer/idle{cell_size * 2}.png", 1, 500)
-        self.add_sprite("jump", f"assets/entities/monsters/destroyer/jump{cell_size * 2}.png", 1, 500)
-        self.add_sprite("attack", f"assets/entities/monsters/destroyer/attack{cell_size * 2}.png", 4, 150, False)
+        self.add_sprite("idle", f"assets/sprites/entities/monsters/destroyer/idle{cell_size * 2}.png", 1, 500)
+        self.add_sprite("jump", f"assets/sprites/entities/monsters/destroyer/jump{cell_size * 2}.png", 1, 500)
+        self.add_sprite("attack", f"assets/sprites/entities/monsters/destroyer/attack{cell_size * 2}.png", 4, 150, False)
         self.set_action("idle")
 
         self.set_sprite_anchor(self.width - self.sprite.width, self.height - self.sprite.height)
 
+        self.add_sound("jump", "assets/sounds/sfx/destroyer_jump.ogg", 50)
+        self.add_sound("attack", "assets/sounds/sfx/destroyer_attack.ogg", 50)
+
+        self.played_attack_sound = False
 
     def land(self, obj: GameObject):
         if self.on_air:
@@ -61,6 +65,7 @@ class Destroyer(Enemy):
             self.jumped = True
             self.speed.y = -sqrt(2 * Destroyer.GRAVITY * (height * self.cell_size))
             self.set_action("jump")
+            self.play_sound("jump")
 
     def update(self):
         self.x += self.speed.x * GD.get_window().delta_time()
@@ -79,6 +84,13 @@ class Destroyer(Enemy):
                 self.land(obj)
                 if self.jumped and self.is_alive():
                     obj.collapse()
+
+        if self.get_action() == "attack":
+            s = self.get_sprite("attack")
+            if s.get_curr_frame() == s.get_final_frame() - 1:
+                if not self.played_attack_sound:
+                    self.played_attack_sound = True
+                    self.play_sound("attack")
 
         self.jump_trigger.x = self.x + self.width/2 - self.trigger_distance
         self.jump_trigger.update()

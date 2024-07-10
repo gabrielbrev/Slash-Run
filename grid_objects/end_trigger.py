@@ -6,7 +6,7 @@ class EndTrigger(Trigger):
     def __init__(self, x, cell_size, grid_id, on_editor = False):
         super().__init__(x, cell_size, grid_id, False, self.end_level, name="end")
         self.on_editor = on_editor
-        self.add_sprite("default",f"assets/grid_objects/highlights/trigger{cell_size}.png", 1)
+        self.add_sprite("default",f"assets/sprites/grid_objects/highlights/trigger{cell_size}.png", 1)
         self.set_action("default")
 
     def end_level(self):

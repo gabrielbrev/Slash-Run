@@ -4,11 +4,13 @@ from PPlay.sprite import Sprite
 
 from scenes.scene_objects.transition import Transition
 
+from core.sound_extra import SoundExtra
+
 from .button import Button
 
 class LockedButton(Button):
-    def __init__(self, mouse: Mouse, button_image, lock_image, locked=True, command: callable = None, args: tuple = (), transition: Transition = None):
-        super().__init__(mouse, button_image, command, args, transition)
+    def __init__(self, mouse: Mouse, button_image, lock_image, locked=True, command: callable = None, args: tuple = (), transition: Transition = None, hover_sound: SoundExtra = None, click_sound: SoundExtra = None, fade_sounds = False):
+        super().__init__(mouse, button_image, command, args, transition, hover_sound, click_sound, fade_sounds)
         self.lock_sprite = Sprite(lock_image, 1)
         self.locked = locked
         if locked:

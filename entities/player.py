@@ -1,14 +1,13 @@
 from PPlay.gameobject import GameObject
-from PPlay.sprite import Sprite
 
 from utils import Vector
-from utils import PrintChange
 
 from core.grid import Grid
 from core.global_data import GlobalData as GD
 
 from .entity import Entity
 from .enemy import Enemy
+from .obstacle import Obstacle
 
 from scenes.scene_objects.bar import Bar
 
@@ -35,24 +34,40 @@ class Player(Entity):
 
         self.attack_delay = 0.3
         self.last_attack_time = 0
+        self.attacking = False
 
         self.invincible = False
 
         self.health = health_bar
         self.energy = energy_bar
 
-        self.add_sprite("run_1", "assets/entities/kim/run_1.png", 6, 500)
-        self.add_sprite("run_2", "assets/entities/kim/run_2.png", 6, 600)
-        self.add_sprite("switch_1", "assets/entities/kim/switch_1.png", 7, 500, False)
-        self.add_sprite("switch_2", "assets/entities/kim/switch_2.png", 7, 500, False)
-        self.add_sprite("jump_1", "assets/entities/kim/jump_1.png", 1)
-        self.add_sprite("jump_2", "assets/entities/kim/jump_2.png", 1)
-        self.add_sprite("attack_1", "assets/entities/kim/attack_1.png", 4, 50, False)
-        self.add_sprite("attack_2", "assets/entities/kim/attack_2.png", 4, 50, False)
-        self.add_sprite("death_1", "assets/entities/kim/death_1.png", 1)
-        self.add_sprite("death_2", "assets/entities/kim/death_2.png", 1)
+        self.add_sprite("run_1", "assets/sprites/entities/kim/run_1.png", 6, 500)
+        self.add_sprite("run_2", "assets/sprites/entities/kim/run_2.png", 6, 500)
+        self.add_sprite("switch_1", "assets/sprites/entities/kim/switch_1.png", 7, 500, False)
+        self.add_sprite("switch_2", "assets/sprites/entities/kim/switch_2.png", 7, 500, False)
+        self.add_sprite("jump_1", "assets/sprites/entities/kim/jump_1.png", 1)
+        self.add_sprite("jump_2", "assets/sprites/entities/kim/jump_2.png", 1)
+        self.add_sprite("attack_1", "assets/sprites/entities/kim/attack_1.png", 6, 75, False)
+        self.add_sprite("attack_2", "assets/sprites/entities/kim/attack_2.png", 6, 75, False)
+        self.add_sprite("death_1", "assets/sprites/entities/kim/death_1.png", 1)
+        self.add_sprite("death_2", "assets/sprites/entities/kim/death_2.png", 1)
 
         super().set_action("run_1")
+
+        self.add_sound("run", "assets/sounds/sfx/kim_run.ogg", 100, True)
+        self.add_sound("attack", "assets/sounds/sfx/kim_attack_1.ogg", 30)
+        self.add_sound("attack", "assets/sounds/sfx/kim_attack_2.ogg", 30)
+        self.add_sound("attack", "assets/sounds/sfx/kim_attack_3.ogg", 30)
+        self.add_sound("special_attack", "assets/sounds/sfx/kim_special_attack.ogg", 70)
+        self.add_sound("jump", "assets/sounds/sfx/kim_jump_1.ogg", 30)
+        self.add_sound("jump", "assets/sounds/sfx/kim_jump_2.ogg", 30)
+        self.add_sound("jump", "assets/sounds/sfx/kim_jump_3.ogg", 30)
+        self.add_sound("jump", "assets/sounds/sfx/kim_jump_4.ogg", 30)
+        self.add_sound("damage", "assets/sounds/sfx/kim_damage.ogg", 75)
+        self.add_sound("death", "assets/sounds/sfx/kim_death.ogg", 25)
+
+        self.play_sound("run")
+        self.pause_sound("run")
 
         GD.set_player(self) 
 
@@ -74,6 +89,10 @@ class Player(Entity):
             self.width = self.sprite.width
             self.height = self.sprite.height
             self.y = curr_feet_pos - self.height
+
+    def get_sprite(self, key):
+        key += f"_{1 if self.curr_grid == self.fg else 2}"
+        return super().get_sprite(key)
 
     def get_curr_grid(self):
         return self.curr_grid
@@ -115,11 +134,12 @@ class Player(Entity):
             self.switch_plane()
 
     def jump(self, height):
-            if not self.on_air:
-                self.on_air = True
-                self.speed.y = -sqrt(2 * Player.GRAVITY * (height * self.curr_grid.cell_size))
-                if not self.switching:
-                    self.set_action("jump", force=True)
+        if not self.on_air:
+            self.on_air = True
+            self.speed.y = -sqrt(2 * Player.GRAVITY * (height * self.curr_grid.cell_size))
+            if not self.switching:
+                self.set_action("jump", force=True)
+            self.play_sound("jump")
 
     def land(self, obj: GameObject):
         if self.on_air:
@@ -129,12 +149,12 @@ class Player(Entity):
                 self.set_action("run")
 
     def move_right(self):
-            if self.x + self.width < GD.get_window().width:
-                self.x += 400 * GD.get_window().delta_time()
+        if self.x + self.width < GD.get_window().width:
+            self.x += 400 * GD.get_window().delta_time()
 
     def move_left(self):
-            if self.x > 0:
-                self.x -= 400 * GD.get_window().delta_time()
+        if self.x > 0:
+            self.x -= 400 * GD.get_window().delta_time()
 
     def switch_plane(self):
         if self.curr_grid == self.bg:
@@ -154,12 +174,15 @@ class Player(Entity):
     def attack(self):
         if time() - self.last_attack_time >= self.attack_delay:
             if not self.get_action() == "attack" and not self.switching:
+                self.attacking = True
                 self.last_attack_time = time()
                 self.set_action("attack")
+                self.play_sound("attack")
 
     def finish_attack(self):
         if not self.sprite.playing:
             if time() - self.last_attack_time >= self.attack_delay:
+                self.attacking = False
                 self.set_action("run", force=True)
 
     def special_attack(self):
@@ -169,13 +192,34 @@ class Player(Entity):
                 if isinstance(obj, Enemy):
                     if obj.is_alive():
                         obj.kill()
+                elif isinstance(obj, Obstacle):
+                    if not obj.is_destroyed():
+                        obj.destroy()
+
+            # Checagem exclusiva para o boss pois é necessário trazer apenas os elementos dele
+            boss_hands_damaged = False
+            for obj in GD.get_screen_objs("SkullordHand"):
+                if not obj.is_damaged():
+                    # SERA IMPLEMENTADO SE SOBRAR TEMPO
+                    # obj.set_action("idle")
+                    # obj.damage()
+                    pass
+                else:
+                    boss_hands_damaged = True
+            if boss_hands_damaged:
+                for obj in GD.get_screen_objs("SkullordHead"):
+                    obj.can_summon = False
+            self.play_sound("special_attack")
             return 1
         return 0
 
     def kill(self):
-        self.alive = False
-        self.health.set_value(0)
-        GD.set_game_over(True)
+        if not GD.is_level_complete():
+            self.alive = False
+            self.health.set_value(0)
+            if not GD.is_game_over():
+                self.play_sound("death")
+            GD.set_game_over(True)
 
     def increment_energy(self):
         self.energy.increment()
@@ -184,13 +228,14 @@ class Player(Entity):
         self.health.increment
 
     def decrement_health(self):
-        if not self.invincible:
+        if not (self.invincible or self.switching):
             temp = self.health.get_value()
             self.health.decrement()
             if self.health.get_value() == 0:
                 self.kill()
             elif self.health.get_value() < temp:
                 self.blink(1)
+                self.play_sound("damage")
 
     def handle_physics(self):
         if self.health.get_value() == 0:
@@ -223,6 +268,7 @@ class Player(Entity):
             and self.y + self.height * 4/5 > obj.y # Verifica se os pés estão abaixo do chão
             ):
             self.kill()
+            self.speed.x = 0
         else:
             if self.switching:
                 if self.speed.y >= 0:
@@ -248,7 +294,7 @@ class Player(Entity):
 
         for obj in GD.get_screen_objs("Attacker", self.curr_grid.id):
             if obj.is_alive() and obj.collided(self):
-                if self.get_action() == "attack":
+                if self.attacking:
                     obj.kill()
                     self.increment_energy()
                 elif not obj.attacked:
@@ -257,7 +303,7 @@ class Player(Entity):
 
         for obj in GD.get_screen_objs("Destroyer", self.curr_grid.id):
             if obj.is_alive() and obj.collided(self):
-                if self.get_action() == "attack":
+                if self.attacking:
                     obj.kill()
                     self.increment_energy()
                 elif not obj.attacked:
@@ -272,15 +318,19 @@ class Player(Entity):
 
         for obj in GD.get_screen_objs("FireBall", self.curr_grid.id):
             if obj.collided(self) and not obj.is_destroyed():
-                if self.get_action() == "attack":
-                    obj.destroy()
-                elif not obj.damaged_player:
+                if not obj.damaged_player:
                     obj.deal_damage()
                     self.decrement_health()
 
         for obj in GD.get_screen_objs("Geyser", self.curr_grid.id):
             if obj.collided(self):
                 if not obj.damaged_player and (obj.get_action() == "active" or obj.get_action() == "rise"):
+                    obj.damage_player()
+                    self.decrement_health()
+
+        for obj in GD.get_screen_objs("Spike", self.curr_grid.id):
+            if obj.collided(self):
+                if not obj.damaged_player:
                     obj.damage_player()
                     self.decrement_health()
 
@@ -295,16 +345,16 @@ class Player(Entity):
         for obj in GD.get_screen_objs("SkullordHand", self.curr_grid.id):
             if obj.collided(self):
                 if obj.is_alive():
-                    if self.get_action() == "attack" and obj.get_action() == "smash":
+                    if self.attacking and obj.get_action() == "smash":
                         obj.damage()
                     elif not obj.attacked:
-                        if obj.get_action() == "smash" and obj.is_moving():
+                        if obj.get_action() == "smash" and obj.is_moving() and not obj.is_damaged():
                             obj.attack()
                             self.decrement_health()
 
         for obj in GD.get_screen_objs("SkullordHead", self.curr_grid.id):
             if obj.collided(self):
-                if obj.get_action() == "magic" and self.get_action() == "attack":
+                if obj.get_action() == "magic" and self.attacking:
                     obj.decrement_health()
 
     def update(self):
@@ -312,12 +362,19 @@ class Player(Entity):
 
         if self.total_blinks:
             self.invincible = True
-        elif not self.switching:
+        else:
             self.invincible = False
 
         self.handle_collisions()
 
+        if self.get_action() != "run":
+            self.pause_sound("run")
+        else:
+            self.unpause_sound("run")
+
         if self.get_action() == "attack":
+            if self.get_sprite("attack").get_curr_frame() > 2:
+                self.attacking = False
             self.finish_attack()
 
         if not self.is_alive():

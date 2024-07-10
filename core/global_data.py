@@ -1,6 +1,9 @@
 from PPlay.window import Window
 from PPlay.gameobject import GameObject
 
+from core.mouse_extra import MouseExtra
+from core.keyboard_extra import KeyboardExtra
+
 from time import time
 
 def print_dict(d, indent=0):
@@ -35,6 +38,10 @@ class GlobalData:
     _level_complete = False
     _level_completion_time = 0
     _game_over = False
+    _mouse = None
+    _keyboard = None
+    _music_volume = 50
+    _sfx_volume = 50
 
     @staticmethod
     def _set_screen(window: Window):
@@ -75,9 +82,13 @@ class GlobalData:
         
 
     @staticmethod
-    def on_screen(obj: GameObject, append_to_list = False):
+    def on_screen(obj: GameObject, append_to_list = False, test_sprite = False):
         if GlobalData._screen:
-            if obj.collided(GlobalData._screen):
+            if test_sprite:
+                test_obj = obj.sprite
+            else:
+                test_obj = obj
+            if test_obj.collided(GlobalData._screen):
                 if append_to_list:
                     GlobalData.add_screen_obj(obj)
                 return True
@@ -88,7 +99,7 @@ class GlobalData:
             raise GlobalData.ScreenException("Window is not set")
     
     @staticmethod
-    def off_screen(obj: GameObject, append_to_list = False):
+    def off_screen(obj: GameObject, append_to_list = False, test_sprite = False):
         if not GlobalData.on_screen(obj, append_to_list):
             if obj.x + obj.width < 0:
                 # Objeto está antes da tela
@@ -199,3 +210,44 @@ class GlobalData:
     @staticmethod
     def get_level_completion_time():
         return GlobalData._level_completion_time
+    
+    @staticmethod
+    def set_mouse(m: MouseExtra):
+        GlobalData._mouse = m
+
+    @staticmethod
+    def get_mouse():
+        return GlobalData._mouse
+    
+    @staticmethod
+    def set_keyboard(k: KeyboardExtra):
+        GlobalData._keyboard = k
+
+    @staticmethod
+    def get_keyboard():
+        return GlobalData._keyboard
+    
+    @staticmethod
+    def set_music_volume(v):
+        if v > 100:
+            v = 100
+        if v < 0:
+            v = 0
+        GlobalData._music_volume = v
+    
+    @staticmethod
+    def get_music_volume():
+        return GlobalData._music_volume
+    
+    @staticmethod
+    def set_sfx_volume(v):
+        if v > 100:
+            v = 100
+        if v < 0:
+            v = 0
+        GlobalData._sfx_volume = v
+
+    @staticmethod
+    def get_sfx_volume():
+        return GlobalData._sfx_volume
+

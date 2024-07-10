@@ -11,25 +11,27 @@ from grid_objects.geyser import Geyser
 from grid_objects.spawn_position import SpawnPos
 from grid_objects.infinite_ground import InfiniteGround
 from grid_objects.end_trigger import EndTrigger
+from grid_objects.spike import Spike
 
 from entities.attacker import Attacker
 from entities.boulder import Boulder
 from entities.destroyer import Destroyer
 from entities.flyer import Flyer
 
-from utils import TimedVariable
+from utils import TimedVariable, convert_seconds
 
 import json
+from time import time
 
 class GridEditor:
-    OBJ_CLASSES = [Ground, InfiniteGround, Geyser, EnergyOrb, Attacker, Destroyer, Flyer, Boulder, SpawnPos, EndTrigger]
+    OBJ_CLASSES = [Ground, InfiniteGround, Geyser, Spike, EnergyOrb, Attacker, Destroyer, Flyer, Boulder, SpawnPos, EndTrigger]
 
     def __init__(self, mouse: Mouse, front_grid: Grid, back_grid: Grid) -> None:
         self.mouse = mouse
         self.fg = front_grid
         self.bg = back_grid
         self.grid = front_grid
-        self.highlight = Sprite(f"assets/grid_objects/highlights/cell{self.grid.cell_size}.png")
+        self.highlight = Sprite(f"assets/sprites/grid_objects/highlights/cell{self.grid.cell_size}.png")
         self.hovering = None
         self.matrix_x = 0
         self.matrix_y = 0
@@ -37,15 +39,18 @@ class GridEditor:
         self.redo_list = []
         self.new_obj_index = len(GridEditor.OBJ_CLASSES) - 1
         self.cycle_object()
-        self.has_changes = True
+        self.has_changes = False
         self.message = TimedVariable("", 10)
+        self.level_duration = 0
+        self.update_cooldown = 10
+        self.last_update_time = 0
 
     def switch_grid(self):
         if self.grid == self.fg:
             self.grid = self.bg
         else:
             self.grid = self.fg
-        self.highlight = Sprite(f"assets/grid_objects/highlights/cell{self.grid.cell_size}.png")
+        self.highlight = Sprite(f"assets/sprites/grid_objects/highlights/cell{self.grid.cell_size}.png")
     
     def add_undo(self, curr_obj, new_obj, x, y, grid_id):
         data = {
@@ -106,9 +111,10 @@ class GridEditor:
         # Caso a seleção nao esteja sobre nenhum objeto, checa a colisao com objetos extensos, que ocupam mais de uma célula quando renderizados
         if not hovered_obj:
             for obj in GD.get_screen_objs("All"):
-                if obj.grid_id == self.grid.id or obj.grid_id == -1 and self.highlight.collided(obj):
+                if (obj.grid_id == self.grid.id or obj.grid_id == -1) and self.highlight.collided(obj):
                     if (isinstance(obj, Ground) 
-                        or isinstance(obj, EndTrigger)):
+                        or isinstance(obj, EndTrigger)
+                        or isinstance(obj, InfiniteGround)):
                         hovered_obj = obj
                         break
 
@@ -124,6 +130,9 @@ class GridEditor:
     
     def get_message(self):
         return self.message.get_value()
+    
+    def get_level_duration(self):
+        return self.level_duration
 
     def create_properties_json(self):
         match self.get_new_object_name():
@@ -136,14 +145,10 @@ class GridEditor:
                 properties = {
                     "tile_height": 1
                 }
-            case "Boulder":
-                properties = {
-                    "fragile": False
-                }
             case _:
                 properties = {}
 
-        with open("new_item_properties.json", "w") as json_file:
+        with open("obj_properties.json", "w") as json_file:
             json.dump(properties, json_file, indent=4)
 
     def cycle_object(self, backwards = False):
@@ -157,7 +162,7 @@ class GridEditor:
 
     def create_object(self, class_name):
         try:
-            with open("new_item_properties.json", "r") as json_file:
+            with open("obj_properties.json", "r") as json_file:
                 properties = json.load(json_file)
             x, y = self.grid.translate_coordinates(self.matrix_x, self.matrix_y)
             match class_name:
@@ -205,7 +210,6 @@ class GridEditor:
                         y=y,
                         cell_size=self.grid.cell_size,
                         grid_id=self.grid.id,
-                        fragile=properties["fragile"]
                     )
                 case "EnergyOrb":
                     obj = EnergyOrb(
@@ -216,6 +220,13 @@ class GridEditor:
                     )
                 case "Geyser":
                     obj = Geyser(
+                        x=x,
+                        y=y,
+                        cell_size=self.grid.cell_size,
+                        grid_id=self.grid.id
+                    )
+                case "Spike":
+                    obj = Spike(
                         x=x,
                         y=y,
                         cell_size=self.grid.cell_size,
@@ -319,6 +330,10 @@ class GridEditor:
             self.highlight.set_position(cell_x, cell_y)
 
             self.hovering = self.get_hovered_object()
+        
+        if time() - self.last_update_time >= self.update_cooldown:
+            self.last_update_time = time()
+            self.level_duration = convert_seconds(abs(self.fg.x) / self.fg.speed.get_default_value())
 
     def draw(self):
         if self.highlight.x < self.grid.x + self.grid.width * self.grid.cell_size:

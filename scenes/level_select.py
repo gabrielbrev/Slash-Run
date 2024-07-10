@@ -9,54 +9,73 @@ from scenes.level import Level
 
 from core.global_data import GlobalData as GD
 from core.keyboard_extra import KeyboardExtra
+from core.sound_extra import SoundExtra
 from core.data_manager import DataManager
 
 class LevelSelect:
-    def __init__(self) -> None:
+    def __init__(self, music: SoundExtra) -> None:
         self.window = GD.get_window()
 
         self.dm = DataManager()
 
-        self.keyboard = KeyboardExtra()
-        self.mouse = Mouse()
+        self.music = music
+
+        button_hover_sound = SoundExtra("assets/sounds/sfx/button_hover.ogg", "sfx", 15, False)
+        button_click_sound = SoundExtra("assets/sounds/sfx/level_button_click.ogg", "sfx", 30, False)
+
+        self.keyboard = GD.get_keyboard()
+        self.mouse = GD.get_mouse()
 
         self.t = Transition(100)
+        self.t.set_play_out_duration(1300)
 
-        self.bg = GameImage("assets/backgrounds/menu_bg.png")
+        self.bg = GameImage("assets/sprites/backgrounds/menu_bg.png")
 
         self.buttons = []
 
         self.level_1_button = LockedButton(
             mouse=self.mouse,
-            button_image="assets/scene_objects/buttons/level1.png",
-            lock_image="assets/scene_objects/buttons/lock.png",
+            button_image="assets/sprites/scene_objects/buttons/level1.png",
+            lock_image="assets/sprites/scene_objects/buttons/lock.png",
             locked=False,
             command=self.start_level,
             args=(1,),
-            transition=self.t
+            transition=self.t,
+            hover_sound=button_hover_sound,
+            click_sound=button_click_sound,
+            fade_sounds=True
         )
         self.level_2_button = LockedButton(
             mouse=self.mouse,
-            button_image="assets/scene_objects/buttons/level2.png",
-            lock_image="assets/scene_objects/buttons/lock.png",
+            button_image="assets/sprites/scene_objects/buttons/level2.png",
+            lock_image="assets/sprites/scene_objects/buttons/lock.png",
             command=self.start_level,
             args=(2,),
-            transition=self.t
+            transition=self.t,
+            hover_sound=button_hover_sound,
+            click_sound=button_click_sound,
+            fade_sounds=True
         )
         self.level_3_button = LockedButton(
             mouse=self.mouse,
-            button_image="assets/scene_objects/buttons/level3.png",
-            lock_image="assets/scene_objects/buttons/lock.png",
+            button_image="assets/sprites/scene_objects/buttons/level3.png",
+            lock_image="assets/sprites/scene_objects/buttons/lock.png",
             command=self.start_level,
             args=(3,),
-            transition=self.t
+            transition=self.t,
+            hover_sound=button_hover_sound,
+            click_sound=button_click_sound,
+            fade_sounds=True
         )
         self.custom_level_button = Button(
             mouse=self.mouse,
-            image_file="assets/scene_objects/buttons/level0.png",
+            image_file="assets/sprites/scene_objects/buttons/level0.png",
             command=self.start_level,
             args=(0,),
-            transition=self.t
+            transition=self.t,
+            hover_sound=button_hover_sound,
+            click_sound=button_click_sound,
+            fade_sounds=True
         )
 
         self.level_2_button.set_position(
@@ -91,24 +110,29 @@ class LevelSelect:
             self.buttons.append(self.custom_level_button)
 
     def start_level(self, level_id):
+        self.music.fadeout(500)
+        self.mouse.hide()
         Level(level_id).loop()
+        self.music.play()
+        self.mouse.unhide()
 
     def loop(self):
         self.t.play_in()
         while True:
             if self.keyboard.key_clicked("ESCAPE"):
+                self.t.set_play_out_duration(100)
                 self.t.play_out(self.window)
                 break
 
             self.window.update()
-
-            self.bg.draw()
             for button in self.buttons:
                 button.update()
                 if button.is_clicked():
                     self.unlock_buttons()
                     self.t.play_in()
 
+            self.bg.draw()
+            self.window.draw_text("ESC to go back", 5, 5, 12, (220, 220, 220))
             for button in self.buttons:
                 button.draw()
 

@@ -11,8 +11,7 @@ class Boulder(Obstacle):
     GRAVITY = 7000
     TERMINAL_VELOCITY = 7000
 
-    def __init__(self, x, y, cell_size, grid_id, fragile):
-        self.SPECIAL_DATA = ["fragile"]
+    def __init__(self, x, y, cell_size, grid_id):
         super().__init__(
             x=x, 
             y=y, 
@@ -20,7 +19,6 @@ class Boulder(Obstacle):
             height=cell_size * 4, 
             cell_size=cell_size, 
             grid_id=grid_id,
-            fragile=fragile
         )
 
         self.x -= 1.5 * self.cell_size
@@ -28,11 +26,14 @@ class Boulder(Obstacle):
 
         self.speed = Vector(-1, 0)
 
-        self.add_sprite("roll", f"assets/entities/boulder/roll{cell_size * 4}.png", 72, 4500)
+        self.add_sprite("roll", f"assets/sprites/entities/boulder/roll{cell_size * 4}.png", 72, 5500)
         self.set_action("roll")
+
+        self.add_sound("roll", "assets/sounds/sfx/boulder_roll.ogg", 70, True)
 
     def reset(self):
         self.speed = Vector(-1, 0)
+        self.damaged_player = False
         super().reset()
 
     def land(self, obj: GameObject):
@@ -59,5 +60,11 @@ class Boulder(Obstacle):
         for obj in GD.get_screen_objs("InfiniteGround", self.grid_id):
             if self.collided(obj):
                 self.land(obj)
-        
+
+        on_screen = GD.on_screen(self)
+        if not self.is_sound_playing("roll") and on_screen:
+            self.play_sound("roll")
+        elif not on_screen:
+            self.fade_sounds(200)
+
         super().update()

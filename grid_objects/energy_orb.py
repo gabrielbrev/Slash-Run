@@ -14,10 +14,12 @@ class EnergyOrb(GridObject):
         self.speed = Vector(0, 0)
         self.collected = False
 
-        self.add_sprite("default", f"assets/grid_objects/collectables/energy_orb{cell_size}.png", 6, 100, False)
+        self.add_sprite("default", f"assets/sprites/grid_objects/collectables/energy_orb{cell_size}.png", 6, 100, False)
         self.get_sprite("default").playing = False
 
         self.set_action("default", play=False)
+
+        self.add_sound("pickup", "assets/sounds/sfx/energy_orb_pickup.ogg", 20)
     
     def reset(self):
         super().reset()
@@ -29,6 +31,7 @@ class EnergyOrb(GridObject):
         self.collected = True
         self.speed.y = -1000
         self.get_sprite("default").playing = True
+        self.play_sound("pickup")
 
     def update(self):
         self.y += self.speed.y * self.window.delta_time()

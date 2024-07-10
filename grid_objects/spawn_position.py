@@ -11,7 +11,7 @@ class SpawnPos(GridObject):
         self.width = cell_size
         self.height = cell_size
         self.on_editor = on_editor
-        self.sprite = Sprite(f"assets/grid_objects/highlights/cell{cell_size}.png", 1)
+        self.sprite = Sprite(f"assets/sprites/grid_objects/highlights/cell{cell_size}.png", 1)
         self.sprite.set_position(x, y)
         self.sprite.set_total_duration(100)
 

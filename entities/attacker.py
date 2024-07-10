@@ -25,12 +25,14 @@ class Attacker(Enemy):
 
         self.speed = Vector(0, 0)
 
-        self.add_sprite("idle", f"assets/entities/monsters/attacker/idle{cell_size}.png", 2, 1000)
-        self.add_sprite("attack", f"assets/entities/monsters/attacker/attack{cell_size}.png", 9, 450, False)
+        self.add_sprite("idle", f"assets/sprites/entities/monsters/attacker/idle{cell_size}.png", 2, 1000)
+        self.add_sprite("attack", f"assets/sprites/entities/monsters/attacker/attack{cell_size}.png", 9, 450, False)
 
         self.set_action("idle")
 
         self.set_sprite_anchor(self.width - self.sprite.width, self.height - self.sprite.height)
+
+        self.add_sound("attack", "assets/sounds/sfx/attacker_attack.ogg", 40)
 
     def land(self, obj: GameObject):
         if self.on_air:
@@ -40,6 +42,7 @@ class Attacker(Enemy):
     def attack(self):
         if not self.get_action() == "attack" and not self.attacked:
             self.set_action("attack", reset=True)
+            self.play_sound("attack")
         super().attack()
 
     def update(self):

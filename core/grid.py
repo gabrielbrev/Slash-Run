@@ -8,6 +8,7 @@ from grid_objects.geyser import Geyser
 from grid_objects.spawn_position import SpawnPos
 from grid_objects.infinite_ground import InfiniteGround
 from grid_objects.end_trigger import EndTrigger
+from grid_objects.spike import Spike
 
 from entities.attacker import Attacker
 from entities.boulder import Boulder
@@ -18,6 +19,7 @@ from entities.entity import Entity
 from utils import Multipliable
 
 import json
+from time import time
 
 class Grid(GameObject):
     next_id = 1
@@ -56,147 +58,183 @@ class Grid(GameObject):
         self.speed.lower_multiplier()
 
     def load_ground(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            tile_width = item["tile_width"]
-            tile_height = item["tile_height"]
-            self.matrix[i][j] = Ground(
-                x=x,
-                y=y,
-                tile_width=tile_width, 
-                tile_height=tile_height,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded ground {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                tile_width = item["tile_width"]
+                tile_height = item["tile_height"]
+                self.matrix[i][j] = Ground(
+                    x=x,
+                    y=y,
+                    tile_width=tile_width, 
+                    tile_height=tile_height,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load ground {item}. Reason: {e}")
 
     def load_infinite_ground(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            tile_height = item["tile_height"]
-            self.matrix[i][j] = InfiniteGround(
-                x=x,
-                y=y,
-                tile_height=tile_height,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded infinite ground {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                tile_height = item["tile_height"]
+                self.matrix[i][j] = InfiniteGround(
+                    x=x,
+                    y=y,
+                    tile_height=tile_height,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load infinite ground {item}. Reason: {e}")
 
     def load_geysers(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = Geyser(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded geyser {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Geyser(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load geyser {item}. Reason: {e}")
+    
+    def load_spikes(self, obj_list):
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Spike(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load spike {item}. Reason: {e}")
 
     def load_energy_orbs(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = EnergyOrb(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded energy orb {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = EnergyOrb(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load energy orb {item}. Reason: {e}")
 
     def load_attackers(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = Attacker(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded attacker {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Attacker(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load attacker {item}. Reason: {e}")
 
     def load_destroyers(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = Destroyer(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded destroyer {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Destroyer(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load destroyer {item}. Reason: {e}")
     
     def load_flyers(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = Flyer(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id
-            )
-            print(f"Loaded flyer {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Flyer(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id
+                )
+            except Exception as e:
+                print(f"Could not load flyer {item}. Reason: {e}")
 
     def load_boulders(self, obj_list):
-        for index, item in enumerate(obj_list):
-            i = item["x"]
-            j = item["y"]
-            x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = Boulder(
-                x=x,
-                y=y,
-                cell_size=self.cell_size,
-                grid_id=self.id,
-                fragile=item["fragile"]
-            )
-            print(f"Loaded boulder {index}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = Boulder(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id,
+                )
+            except Exception as e:
+                print(f"Could not load boulder {item}. Reason: {e}")
 
     def load_spawn_positions(self, obj_list):
-        for index, item in enumerate(obj_list):
+        for item in obj_list:
+            try:
+                i = item["x"]
+                j = item["y"]
+                x, y = self.translate_coordinates(i, j)
+                self.matrix[i][j] = self.spawn_position = SpawnPos(
+                    x=x,
+                    y=y,
+                    cell_size=self.cell_size,
+                    grid_id=self.id,
+                    on_editor=self.on_editor
+                )
+            except Exception as e:
+                print(f"Could not load spawn position {item}. Reason: {e}")
+
+    def load_end_trigger(self, obj_list):
+        try:
+            item = obj_list[0]
             i = item["x"]
             j = item["y"]
             x, y = self.translate_coordinates(i, j)
-            self.matrix[i][j] = self.spawn_position = SpawnPos(
+            self.matrix[i][j] = EndTrigger(
                 x=x,
-                y=y,
                 cell_size=self.cell_size,
                 grid_id=self.id,
                 on_editor=self.on_editor
             )
-            print(f"Loaded spawn position {index + 1}/{len(obj_list)} at ({i}, {j}) in grid {self.id}")
-
-    def load_end_trigger(self, obj_list):
-        item = obj_list[0]
-        i = item["x"]
-        j = item["y"]
-        x, y = self.translate_coordinates(i, j)
-        self.matrix[i][j] = EndTrigger(
-            x=x,
-            cell_size=self.cell_size,
-            grid_id=self.id,
-            on_editor=self.on_editor
-        )
-        print(f"Loaded end trigger at ({i}, {j}) in grid {self.id}")
+        except Exception as e:
+            print(f"Could not load end trigger {item}. Reason: {e}")
         
     def load_level(self, file_path):
+        print(f"LOADING GRID {self.id}")
         with open(file_path, "r") as json_file:
             level: dict = json.load(json_file)
         for key in level.keys():
+            start_time = time()
             match key:
                 case "Ground":
                     self.load_ground(level[key])
@@ -204,6 +242,8 @@ class Grid(GameObject):
                     self.load_infinite_ground(level[key])
                 case "Geyser":
                     self.load_geysers(level[key])
+                case "Spike":
+                    self.load_spikes(level[key])
                 case "EnergyOrb":
                     self.load_energy_orbs(level[key])
                 case "Attacker":
@@ -218,6 +258,45 @@ class Grid(GameObject):
                     self.load_spawn_positions(level[key])
                 case "EndTrigger":
                     self.load_end_trigger(level[key])
+            
+            print(f"Loaded {key}(s) in {(time() - start_time):.2f}")
+        print()
+
+    def mute(self):
+        for obj_list in self.matrix:
+            broke_loop = False
+            for obj in obj_list:
+                if obj:
+                    if GD.off_screen(obj) > 0:
+                        broke_loop = True
+                        break
+                    obj.mute()
+            if broke_loop:
+                break
+    
+    def unmute(self):
+        for obj_list in self.matrix:
+            broke_loop = False
+            for obj in obj_list:
+                if obj:
+                    if GD.off_screen(obj) > 0:
+                        broke_loop = True
+                        break
+                    obj.unmute()
+            if broke_loop:
+                break
+
+    def fade_sounds(self, time_ms):
+        for obj_list in self.matrix:
+            broke_loop = False
+            for obj in obj_list:
+                if obj:
+                    if GD.off_screen(obj) > 0:
+                        broke_loop = True
+                        break
+                    obj.fade_sounds(time_ms)
+            if broke_loop:
+                break
 
     def get_spawn_position(self):
         if self.spawn_position:
@@ -282,9 +361,10 @@ class Grid(GameObject):
         for obj_list in self.matrix:
             for i, obj in enumerate(obj_list):
                 if obj:
-                    match GD.off_screen(obj, append_to_list=True):
+                    match GD.off_screen(obj, append_to_list=True, test_sprite=True):
                         case -1:
                             if not self.on_editor:
+                                obj.fade_sounds(200)
                                 obj_list[i] = None
                         case 0:
                             obj.draw()

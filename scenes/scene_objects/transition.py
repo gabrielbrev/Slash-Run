@@ -9,12 +9,12 @@ class Transition:
     def __init__(self, duration):
         self.init_time = 0
 
-        self.t_in = Sprite("assets/scene_objects/transition_in.png", 10)
+        self.t_in = Sprite("assets/sprites/scene_objects/transition_in.png", 10)
         self.t_in.set_total_duration(duration)
         self.t_in.set_loop(False)
         self.t_in.playing = False
 
-        self.t_out = Sprite("assets/scene_objects/transition_out.png", 10)
+        self.t_out = Sprite("assets/sprites/scene_objects/transition_out.png", 10)
         self.t_out.set_total_duration(duration)
         self.t_out.set_loop(False)
         self.t_out.playing = False
@@ -35,6 +35,12 @@ class Transition:
         self.curr_t.playing = False
         self.played = False
         self.started = False
+
+    def set_play_out_duration(self, time_ms):
+        self.t_out = Sprite("assets/sprites/scene_objects/transition_out.png", 10)
+        self.t_out.set_total_duration(time_ms)
+        self.t_out.set_loop(False)
+        self.t_out.playing = False
 
     def play_in(self):
         self._play(self.t_in)

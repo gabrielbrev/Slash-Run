@@ -1,6 +1,10 @@
 from PPlay.window import Window
+from PPlay.gameobject import GameObject
+
+from core.global_data import GlobalData as GD
 
 from time import time
+from math import sqrt
 
 class Vector:
     def __init__(self, x = 0, y = 0) -> None:
@@ -29,6 +33,7 @@ class FPSCounter:
     def draw(self):
         self.window.draw_text(str(self.curr_fps), self.x, self.y, self.size, self.color)
   
+# Variavel que possui um valor padrao e pode ser multiplicada por uma serie de numeros desejados
 class Multipliable:
     def __init__(self, value: int, multipliers: list = [1]) -> None:
         self.default_value = value
@@ -44,6 +49,9 @@ class Multipliable:
     def get_value(self):
         return self.curr_value
     
+    def get_default_value(self):
+        return self.default_value
+    
     def raise_multiplier(self):
         if self.cursor < len(self.multipliers) - 1:
             self.cursor += 1
@@ -54,6 +62,7 @@ class Multipliable:
             self.cursor -= 1
             self.curr_value = self.default_value * self.multipliers[self.cursor]
 
+# Variavel que reseta seu valor apos o tempo desejado
 class TimedVariable:
     def __init__(self, default_value, duration_s) -> None:
         self.default_value = default_value
@@ -81,4 +90,30 @@ class PrintChange:
         if PrintChange._last_print != values:
             print(*values)
             PrintChange._last_print = values
+
+# Feito para aumentar a dificuldade do boss de acordo com sua vida
+def difficulty_multiplier(health, max_health):
+    return 1 + (max_health - health) / 6
+
+def convert_seconds(total_seconds):
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = int(total_seconds % 60)
     
+    result = []
+    if days > 0:
+        result.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours > 0:
+        result.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes > 0:
+        result.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if seconds > 0:
+        result.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+    
+    if len(result) > 1:
+        return ', '.join(result[:-1]) + ' and ' + result[-1]
+    elif result:
+        return result[0]
+    else:
+        return "0 seconds"

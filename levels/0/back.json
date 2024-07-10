@@ -1,16 +1,1 @@
-{
-    "InfiniteGround": [
-        {
-            "x": 0,
-            "y": 5,
-            "tile_height": 1
-        }
-    ],
-    "Boulder": [
-        {
-            "x": 31,
-            "y": 6,
-            "fragile": false
-        }
-    ]
-}
+{}

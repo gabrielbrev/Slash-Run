@@ -25,11 +25,14 @@ class Ground(GridObject):
         for i in range(tile_width):
             tile_list = []
             for j in range(tile_height):
+                file_format = "png"
                 if infinite:
                     if j == 0:
                         name = "top_mid"
+                        file_format = "jpeg"
                     else:
                         name = "center_mid"
+                        file_format = "jpeg"
                 else:
                     if i == tile_width - 1 == 0:
                         if j == 0:
@@ -49,15 +52,16 @@ class Ground(GridObject):
                     else:
                         if j == 0:
                             name = "top_mid"
+                            file_format = "jpeg"
                         else:
                             name = "center_mid"
-
-                tile = Sprite(f"assets/grid_objects/ground/{name}{self.tile_size}.png")
+                            file_format = "jpeg"
+                tile = Sprite(f"assets/sprites/grid_objects/ground/{name}{self.tile_size}.{file_format}")
                 tile.x = x + i * self.tile_size
                 tile.y = y + j * self.tile_size
                 tile_list.append(tile)
             self.tiles.append(tile_list)
-        
+
         self.collapsing = False
         self.speed = Vector(0, 0)
 
@@ -80,6 +84,7 @@ class Ground(GridObject):
         self.y += self.speed.y * GD.get_window().delta_time()
         if self.collapsing:
             self.speed.y += Ground.GRAVITY * GD.get_window().delta_time()
+
         self.update_position()
 
     def draw(self):
