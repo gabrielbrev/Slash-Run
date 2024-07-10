@@ -55,30 +55,32 @@ class GlobalData:
 
     @staticmethod
     def add_screen_obj(obj: GameObject):
-        obj_class = obj.__class__.__name__
-        grid_id = obj.grid_id
+        if obj:
+            obj_class = obj.__class__.__name__
+            grid_id = obj.grid_id
 
-        if obj_class in GlobalData._on_screen_dict:
-            if grid_id in GlobalData._on_screen_dict[obj_class]:
-                GlobalData._on_screen_dict[obj_class][grid_id].add(obj)
+            if obj_class in GlobalData._on_screen_dict:
+                if grid_id in GlobalData._on_screen_dict[obj_class]:
+                    GlobalData._on_screen_dict[obj_class][grid_id].add(obj)
+                else:
+                    GlobalData._on_screen_dict[obj_class][grid_id] = set([obj])
             else:
-                GlobalData._on_screen_dict[obj_class][grid_id] = set([obj])
-        else:
-            GlobalData._on_screen_dict[obj_class] = {grid_id: set([obj])}
+                GlobalData._on_screen_dict[obj_class] = {grid_id: set([obj])}
 
-        GlobalData._on_screen_dict["All"].add(obj)
+            GlobalData._on_screen_dict["All"].add(obj)
         
 
     @staticmethod
     def remove_screen_obj(obj: GameObject):
-        obj_class = obj.__class__.__name__
-        grid_id = obj.grid_id
+        if obj:
+            obj_class = obj.__class__.__name__
+            grid_id = obj.grid_id
 
-        if obj_class in GlobalData._on_screen_dict:
-            if grid_id in GlobalData._on_screen_dict[obj_class]:
-                GlobalData._on_screen_dict[obj_class][grid_id].discard(obj)
+            if obj_class in GlobalData._on_screen_dict:
+                if grid_id in GlobalData._on_screen_dict[obj_class]:
+                    GlobalData._on_screen_dict[obj_class][grid_id].discard(obj)
 
-        GlobalData._on_screen_dict["All"].discard(obj)
+            GlobalData._on_screen_dict["All"].discard(obj)
         
 
     @staticmethod

@@ -1,4 +1,5 @@
 from PPlay.sprite import Sprite
+from PPlay.gameimage import GameImage
 
 from .grid_object import GridObject
 
@@ -79,6 +80,19 @@ class Ground(GridObject):
         self.x = x
         self.y = y
         self.update_position()
+
+    def increase_width(self):
+        self.tile_width += 1
+        self.width += self.tile_size
+        tile_list = []
+        for i in range(self.tile_height):
+            if i == 0:
+                name = "top_mid"
+            else:
+                name = "center_mid"
+            tile = Sprite(f"assets/sprites/grid_objects/ground/{name}{self.tile_size}.jpeg")
+            tile_list.append(tile)
+        self.tiles.insert(-1, tile_list)
 
     def update(self):
         self.y += self.speed.y * GD.get_window().delta_time()

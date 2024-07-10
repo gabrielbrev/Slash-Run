@@ -231,8 +231,13 @@ class Grid(GameObject):
         
     def load_level(self, file_path):
         print(f"LOADING GRID {self.id}")
-        with open(file_path, "r") as json_file:
-            level: dict = json.load(json_file)
+        try:
+            with open(file_path, "r") as json_file:
+                level: dict = json.load(json_file)
+        except FileNotFoundError:
+            with open(file_path, "w") as json_file:
+                level: dict = {}
+                json.dumps(level, json_file)
         for key in level.keys():
             start_time = time()
             match key:
@@ -258,7 +263,7 @@ class Grid(GameObject):
                     self.load_spawn_positions(level[key])
                 case "EndTrigger":
                     self.load_end_trigger(level[key])
-            
+    
             print(f"Loaded {key}(s) in {(time() - start_time):.2f}")
         print()
 

@@ -19,6 +19,7 @@ from .scene_objects.button import Button
 
 from utils import FPSCounter
 from utils import Multipliable
+from utils import convert_seconds
 
 from time import time, sleep
 
@@ -195,6 +196,7 @@ class Level:
     def loop(self):
         self.load_level()
         self.music.play()
+        start_time = ()
         while True:
             if GD.is_game_over() or self.paused:
                 if self.music.is_playing():
@@ -208,6 +210,7 @@ class Level:
                 if  time() - GD.get_level_completion_time() > self.completion_delay:
                     self.t.play_out(self.window)
                     self.dm.update_current_level(self.level_id)
+                    print(f"Level duration: {convert_seconds(time() - start_time)}")
                     break
 
             self.handle_input()
@@ -265,6 +268,7 @@ class Level:
     def boss_loop(self):
         self.load_level()
         self.music.play()
+        start_time = time()
         while True:
             if GD.is_game_over() or self.paused:
                 if self.music.is_playing():
@@ -278,6 +282,7 @@ class Level:
                 if  time() - GD.get_level_completion_time() > self.completion_delay:
                     self.t.play_out(self.window)
                     self.dm.update_current_level(self.level_id)
+                    print(f"Level duration: {convert_seconds(time() - start_time)}")
                     break
 
             self.handle_input()

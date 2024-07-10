@@ -57,11 +57,6 @@ class LevelEditor:
             self.front_grid.raise_speed()
             self.back_grid.raise_speed()
             self.scroll_multiplier.raise_multiplier()
-        if self.keyboard.key_clicked("S"):
-            self.bg.lower_speed()
-            self.front_grid.lower_speed()
-            self.back_grid.lower_speed()
-            self.scroll_multiplier.lower_multiplier()
 
         if self.keyboard.key_pressed("LEFT_CONTROL"):
             if self.keyboard.key_pressed("LEFT_SHIFT"):
@@ -72,6 +67,13 @@ class LevelEditor:
                     self.editor.undo()
                 if self.keyboard.key_clicked("S"):
                     self.editor.save_changes(f"levels/0")
+        else:
+            if self.keyboard.key_clicked("S"):
+                self.bg.lower_speed()
+                self.front_grid.lower_speed()
+                self.back_grid.lower_speed()
+                self.scroll_multiplier.lower_multiplier()
+
         
         if self.keyboard.key_clicked("SPACE"):
             self.editor.switch_grid()            

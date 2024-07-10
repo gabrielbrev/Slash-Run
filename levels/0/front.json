@@ -1,12 +1,4 @@
 {
-    "Ground": [
-        {
-            "x": 0,
-            "y": 3,
-            "tile_width": 50,
-            "tile_height": 1
-        }
-    ],
     "SpawnPos": [
         {
             "x": 0,
@@ -16,10 +8,6 @@
     "EndTrigger": [
         {
             "x": 63,
-            "y": 4
-        },
-        {
-            "x": 395,
             "y": 4
         }
     ]

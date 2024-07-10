@@ -52,29 +52,34 @@ class GridEditor:
             self.grid = self.fg
         self.highlight = Sprite(f"assets/sprites/grid_objects/highlights/cell{self.grid.cell_size}.png")
     
-    def add_undo(self, curr_obj, new_obj, x, y, grid_id):
+    def add_undo(self, curr_obj, new_obj, x, y, grid_id, copy_coords = False):
         data = {
             "grid_id": grid_id,
             "curr_obj": curr_obj,
             "new_obj": new_obj,
             "x": x,
-            "y": y
+            "y": y,
+            "copy_coords": copy_coords
         }
         self.undo_list.append(data)
         if len(self.undo_list) > 100:
             self.undo_list.pop(0)
 
-    def add_redo(self, curr_obj, new_obj, x, y, grid_id):
+    def add_redo(self, curr_obj, new_obj, x, y, grid_id, copy_coords = False):
         data = {
             "grid_id": grid_id,
             "curr_obj": curr_obj,
             "new_obj": new_obj,
             "x": x,
-            "y": y
+            "y": y,
+            "copy_coords": copy_coords
         }
         self.redo_list.append(data)
         if len(self.redo_list) > 100:
             self.redo_list.pop(0)
+
+    def empty_redo(self):
+        self.redo_list.clear()
 
     def undo(self):
         self.has_changes = True
@@ -87,7 +92,13 @@ class GridEditor:
             y = data["y"]
             self.add_redo(new_obj, curr_obj, x, y, data["grid_id"])
             grid.matrix[x][y] = curr_obj
+            if data["copy_coords"]:
+                curr_obj.x = new_obj.x
+                curr_obj.y = new_obj.y
             self.undo_list.pop(-1)
+            GD.remove_screen_obj(new_obj)
+            if curr_obj:
+                curr_obj.update_position()
 
     def redo(self):
         self.has_changes = True
@@ -100,7 +111,13 @@ class GridEditor:
             y = data["y"]
             self.add_undo(new_obj, curr_obj, x, y, data["grid_id"])
             grid.matrix[x][y] = curr_obj
+            if data["copy_coords"]:
+                curr_obj.x = new_obj.x
+                curr_obj.y = new_obj.y
             self.redo_list.pop(-1)
+            GD.remove_screen_obj(new_obj)
+            if curr_obj:
+                curr_obj.update_position()
 
     def get_hovered_object(self) -> GameObject:
         try:
@@ -167,6 +184,7 @@ class GridEditor:
             x, y = self.grid.translate_coordinates(self.matrix_x, self.matrix_y)
             match class_name:
                 case "Ground":
+                    self.message.set_value("Place another on top of this to increase it's width")
                     obj = Ground(
                         x=x,
                         y=y,
@@ -252,32 +270,68 @@ class GridEditor:
             print(e)
             self.message.set_value("Houve um erro ao tentar instanciar o novo objeto")
 
+    def change_ground_width(self, amount = 1):
+        curr_obj: Ground = self.hovering
+        matrix_x = matrix_y = 0
+        found_obj = False
+        for i in range(len(self.grid.matrix)):
+            for j in range(len(self.grid.matrix[i])):
+                if self.grid.matrix[i][j] == curr_obj:
+                    found_obj = True
+                    matrix_x = i
+                    matrix_y = j
+                    break
+            if found_obj:
+                break
+        x, y = self.grid.translate_coordinates(matrix_x, matrix_y)
+        new_obj = Ground(
+            x=x,
+            y=y,
+            tile_width=curr_obj.tile_width + amount,
+            tile_height=curr_obj.tile_height,
+            cell_size=curr_obj.cell_size,
+            grid_id=curr_obj.grid_id
+        )
+        self.add_undo(curr_obj, new_obj, matrix_x, matrix_y, self.grid.id, True)
+        self.grid.matrix[matrix_x][matrix_y] = new_obj
+        GD.remove_screen_obj(curr_obj)
+        new_obj.update_position()
+
     def place_object(self):
         if 0 <= self.matrix_x < self.grid.width and 0 <= self.matrix_y < self.grid.height:
             self.has_changes = True
-            curr_obj = self.grid.matrix[self.matrix_x][self.matrix_y]
-            new_obj = self.create_object(self.get_new_object_name())
-            if new_obj:
-                self.add_undo(curr_obj, new_obj, self.matrix_x, self.matrix_y, self.grid.id)
-                self.grid.matrix[self.matrix_x][self.matrix_y] = new_obj
-                if curr_obj:
-                    GD.remove_screen_obj(curr_obj)
+            if isinstance(self.hovering, Ground) and self.get_new_object_name() == "Ground":
+                self.change_ground_width()
+            else:
+                curr_obj = self.grid.matrix[self.matrix_x][self.matrix_y]
+                new_obj = self.create_object(self.get_new_object_name())
+                if new_obj:
+                    self.add_undo(curr_obj, new_obj, self.matrix_x, self.matrix_y, self.grid.id)
+                    self.grid.matrix[self.matrix_x][self.matrix_y] = new_obj
+                    if curr_obj:
+                        GD.remove_screen_obj(curr_obj)
 
-                new_obj.update_position()
+                    new_obj.update_position()
+            self.empty_redo()
 
     def delete_hovered_object(self):
         if 0 <= self.matrix_x < self.grid.width and 0 <= self.matrix_y < self.grid.height:
             self.has_changes = True
-            self.add_undo(self.hovering, None, self.matrix_x, self.matrix_y, self.grid.id)
-            if self.grid.matrix[self.matrix_x][self.matrix_y]:
-                self.grid.matrix[self.matrix_x][self.matrix_y] = None
+            if isinstance(self.hovering, Ground):
+                if self.hovering.width > 1:
+                    self.change_ground_width(-1)
             else:
-                for obj_list in self.grid.matrix:
-                    if self.hovering in obj_list:
-                        obj_list[obj_list.index(self.hovering)] = None
-                        break
-            if self.hovering:
-                GD.remove_screen_obj(self.hovering)
+                self.add_undo(self.hovering, None, self.matrix_x, self.matrix_y, self.grid.id)
+                if self.grid.matrix[self.matrix_x][self.matrix_y]:
+                    self.grid.matrix[self.matrix_x][self.matrix_y] = None
+                else:
+                    for obj_list in self.grid.matrix:
+                        if self.hovering in obj_list:
+                            obj_list[obj_list.index(self.hovering)] = None
+                            break
+                if self.hovering:
+                    GD.remove_screen_obj(self.hovering)
+            self.empty_redo()
 
     def is_saved(self):
         return not self.has_changes
