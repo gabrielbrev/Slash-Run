@@ -4,12 +4,16 @@ from core.global_data import GlobalData as GD
 
 from .scene_objects.transition import Transition
 from .scene_objects.background import Background
+from .scene_objects.button import Button
+
+from scenes.info import Info
 
 from utils import Multipliable
 from utils import TimedVariable
 
 from core.keyboard_extra import KeyboardExtra
 from core.mouse_extra import MouseExtra
+from core.sound_extra import SoundExtra
 
 class LevelEditor:
     def __init__(self) -> None:
@@ -23,6 +27,19 @@ class LevelEditor:
         scroll_multipliers = [num/10 for num in range(10, 51, 5)]
 
         self.bg = Background(Multipliable(50, scroll_multipliers))
+
+        self.info_button = Button(
+            mouse=self.mouse,
+            image_file="assets/sprites/scene_objects/buttons/info.png",
+            command=Info("assets/sprites/scene_objects/editor_info.png").loop,
+            transition=self.t,
+            hover_sound=SoundExtra("assets/sounds/sfx/button_hover.ogg", "sfx", 15, False),
+            click_sound=SoundExtra("assets/sounds/sfx/menu_button_click.ogg", "sfx", 30, False)
+        )
+        self.info_button.set_position(
+            x=self.window.width - self.info_button.width - 10,
+            y=10
+        )
 
         self.front_grid = Grid(2000, 13, 64, Multipliable(600, scroll_multipliers), True)
         self.front_grid.load_level(f"levels/0/front.json")
@@ -104,6 +121,9 @@ class LevelEditor:
 
             self.window.update()
             self.editor.update()
+            self.info_button.update()
+            if self.info_button.is_clicked():
+                self.t.play_in()
 
             self.bg.draw()
             self.back_grid.draw()
@@ -122,6 +142,7 @@ class LevelEditor:
                 self.window.draw_text(self.editor.get_message(), x=0, y=15, bold=True, color=(255, 255, 255))
             else:
                 self.window.draw_text('''To change the current item properties go to "obj_properties.json" in the project's folder''', x=0, y=15, color=(255, 255, 255))
+            self.info_button.draw()
 
             self.t.update()
             self.t.draw()

@@ -6,6 +6,7 @@ from .scene_objects.button import Button
 from .scene_objects.transition import Transition
 
 from scenes.level import Level
+from scenes.info import Info
 
 from core.global_data import GlobalData as GD
 from core.keyboard_extra import KeyboardExtra
@@ -31,7 +32,20 @@ class LevelSelect:
 
         self.bg = GameImage("assets/sprites/backgrounds/menu_bg.png")
 
-        self.buttons = []
+        self.info_button = Button(
+            mouse=self.mouse,
+            image_file="assets/sprites/scene_objects/buttons/info.png",
+            command=Info("assets/sprites/scene_objects/gameplay_info.png").loop,
+            transition=self.t,
+            hover_sound=button_hover_sound,
+            click_sound=SoundExtra("assets/sounds/sfx/menu_button_click.ogg", "sfx", 40, False)
+        )
+        self.info_button.set_position(
+            x=self.window.width - self.info_button.width - 10,
+            y=10
+        )
+
+        self.level_buttons = []
 
         self.level_1_button = LockedButton(
             mouse=self.mouse,
@@ -95,9 +109,9 @@ class LevelSelect:
             y=(self.level_2_button.y + self.level_2_button.height + self.window.height)/2 - self.custom_level_button.height/2
         )
 
-        self.buttons.append(self.level_1_button)
-        self.buttons.append(self.level_2_button)
-        self.buttons.append(self.level_3_button)
+        self.level_buttons.append(self.level_1_button)
+        self.level_buttons.append(self.level_2_button)
+        self.level_buttons.append(self.level_3_button)
 
         self.unlock_buttons()
 
@@ -105,9 +119,9 @@ class LevelSelect:
         current_level = self.dm.get_current_level()
         for i in range(current_level):
             if i < 3:
-                self.buttons[i].unlock()
+                self.level_buttons[i].unlock()
         if self.dm.has_accessed_editor():
-            self.buttons.append(self.custom_level_button)
+            self.level_buttons.append(self.custom_level_button)
 
     def start_level(self, level_id):
         self.music.fadeout(500)
@@ -125,16 +139,20 @@ class LevelSelect:
                 break
 
             self.window.update()
-            for button in self.buttons:
+            for button in self.level_buttons:
                 button.update()
                 if button.is_clicked():
                     self.unlock_buttons()
                     self.t.play_in()
+            self.info_button.update()
+            if self.info_button.is_clicked():
+                self.t.play_in()
 
             self.bg.draw()
             self.window.draw_text("ESC to go back", 5, 5, 12, (220, 220, 220))
-            for button in self.buttons:
+            for button in self.level_buttons:
                 button.draw()
+            self.info_button.draw()
 
             self.t.update()
             self.t.draw()

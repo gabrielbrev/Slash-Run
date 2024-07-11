@@ -312,14 +312,14 @@ class GridEditor:
                         GD.remove_screen_obj(curr_obj)
 
                     new_obj.update_position()
+                print(f"Placed new {new_obj.__class__.__name__} at ({self.matrix_x}, {self.matrix_y})")
             self.empty_redo()
 
     def delete_hovered_object(self):
         if 0 <= self.matrix_x < self.grid.width and 0 <= self.matrix_y < self.grid.height:
             self.has_changes = True
-            if isinstance(self.hovering, Ground):
-                if self.hovering.width > 1:
-                    self.change_ground_width(-1)
+            if isinstance(self.hovering, Ground) and self.hovering.tile_width > 1:
+                self.change_ground_width(-1)
             else:
                 self.add_undo(self.hovering, None, self.matrix_x, self.matrix_y, self.grid.id)
                 if self.grid.matrix[self.matrix_x][self.matrix_y]:
@@ -331,6 +331,7 @@ class GridEditor:
                             break
                 if self.hovering:
                     GD.remove_screen_obj(self.hovering)
+                print(f"Deleted object at ({self.matrix_x}, {self.matrix_y})")
             self.empty_redo()
 
     def is_saved(self):

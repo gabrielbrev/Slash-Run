@@ -178,8 +178,6 @@ class Level:
             self.music_fade_time = time() + 4
             self.boss_init_time = self.music_fade_time + 2
             self.completion_delay = 5
-            for i in range(10):
-                self.player.increment_energy()
         
         GD.set_level_being_played(self.level_id)
         GD.set_level_complete(False)
@@ -196,7 +194,7 @@ class Level:
     def loop(self):
         self.load_level()
         self.music.play()
-        start_time = ()
+        start_time = time()
         while True:
             if GD.is_game_over() or self.paused:
                 if self.music.is_playing():

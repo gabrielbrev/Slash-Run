@@ -15,10 +15,10 @@ class Attacker(Enemy):
 
     def __init__(self, x, y, cell_size, grid_id):
         super().__init__(
-            x=x - cell_size * 1/4, 
-            y=y - cell_size * 1/2, 
-            width=cell_size * 3/2, 
-            height=cell_size * 3/2, 
+            x=x, 
+            y=y, 
+            width=cell_size, 
+            height=cell_size, 
             cell_size=cell_size, 
             grid_id=grid_id
         )
