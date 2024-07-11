@@ -76,7 +76,7 @@ class DataManager:
                 open(path, "r")
             except FileNotFoundError:
                 with open(path, "w") as json_file:
-                    json.dump(data, json_file)
+                    json.dump(data, json_file, indent=4)
 
         create_if_not_exists("game_data.json", {
             "first_boot": True,

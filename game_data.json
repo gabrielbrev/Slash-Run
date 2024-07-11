@@ -1,1 +1,7 @@
-{"first_boot": true, "current_level": 1, "accessed_editor": false, "music_volume": 50, "sfx_volume": 50}
+{
+    "first_boot": true,
+    "current_level": 1,
+    "accessed_editor": false,
+    "music_volume": 50.0,
+    "sfx_volume": 50.0
+}
